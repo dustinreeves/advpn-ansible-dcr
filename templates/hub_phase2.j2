@@ -1,5 +1,5 @@
 config vpn ipsec phase2-interface
-{% for t in tunnel_matrix %}
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
     edit "{{ t.name }}"
         set phase1name "{{ t.name }}"
         set proposal {{ phase2.proposal }}
