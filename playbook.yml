@@ -1,0 +1,124 @@
+---
+- name: Render ADVPN lab configs
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Ensure rendered output directory exists
+      ansible.builtin.file:
+        path: rendered
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      run_once: true
+
+  tasks:
+    - name: Render baseline config
+      ansible.builtin.template:
+        src: templates/musthaves.j2
+        dest: rendered/{{ inventory_hostname }}-baseline.conf
+      delegate_to: localhost
+
+    - name: Render interfaces config
+      ansible.builtin.template:
+        src: templates/interfaces.j2
+        dest: rendered/{{ inventory_hostname }}-interfaces.conf
+      delegate_to: localhost
+
+    - name: Render hub phase1 config
+      ansible.builtin.template:
+        src: templates/hub_phase1.j2
+        dest: rendered/{{ inventory_hostname }}-phase1.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub tunnel allowaccess config
+      ansible.builtin.template:
+        src: templates/hub_tunnel_allowaccess.j2
+        dest: rendered/{{ inventory_hostname }}-tunnel-allowaccess.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub phase2 config
+      ansible.builtin.template:
+        src: templates/hub_phase2.j2
+        dest: rendered/{{ inventory_hostname }}-phase2.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub community lists
+      ansible.builtin.template:
+        src: templates/community_lists.j2
+        dest: rendered/{{ inventory_hostname }}-community-lists.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub route-maps
+      ansible.builtin.template:
+        src: templates/route_maps_hub.j2
+        dest: rendered/{{ inventory_hostname }}-route-maps.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub SD-WAN config
+      ansible.builtin.template:
+        src: templates/sdwan_hub.j2
+        dest: rendered/{{ inventory_hostname }}-sdwan.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render hub BGP config
+      ansible.builtin.template:
+        src: templates/bgp_hub.j2
+        dest: rendered/{{ inventory_hostname }}-bgp.conf
+      when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render branch phase1 config
+      ansible.builtin.template:
+        src: templates/branch_phase1.j2
+        dest: rendered/{{ inventory_hostname }}-phase1.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render branch tunnel allowaccess config
+      ansible.builtin.template:
+        src: templates/branch_tunnel_allowaccess.j2
+        dest: rendered/{{ inventory_hostname }}-tunnel-allowaccess.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render branch phase2 config
+      ansible.builtin.template:
+        src: templates/branch_phase2.j2
+        dest: rendered/{{ inventory_hostname }}-phase2.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render branch route-maps
+      ansible.builtin.template:
+        src: templates/route_maps_branch.j2
+        dest: rendered/{{ inventory_hostname }}-route-maps.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render branch SD-WAN config
+      ansible.builtin.template:
+        src: templates/sdwan_branch.j2
+        dest: rendered/{{ inventory_hostname }}-sdwan.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render branch BGP config
+      ansible.builtin.template:
+        src: templates/bgp_branch.j2
+        dest: rendered/{{ inventory_hostname }}-bgp.conf
+      when: device_role == "branch"
+      delegate_to: localhost
+
+    - name: Render hub inter-hub IPsec config
+      ansible.builtin.template:
+        src: templates/hub_interhub_ipsec.j2
+        dest: rendered/{{ inventory_hostname }}-interhub-ipsec.conf
+      when: device_role == "hub"
+      delegate_to: localhost

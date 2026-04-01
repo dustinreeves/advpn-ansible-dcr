@@ -93,7 +93,7 @@ sdwan_inet_service:
   dst: rfc1918grp
   dst_negate: enable
 
-  hub_sdwan_inet_service:
+hub_sdwan_inet_service:
   name: Generic_INET
   src: rfc1918grp
   dst: rfc1918grp
@@ -119,6 +119,7 @@ hub_sdwan_route_services:
     route_tag: 4
     src: rfc1918grp
     priority_members: [4]
+
 bgp:
   asn: 65152
   ebgp_multipath: enable
@@ -138,13 +139,18 @@ bgp:
   connect_timer: 1
   additional_path_mode: both
   adv_additional_path: 8
+  adv_additional_path_branch: 8
   route_reflector_client: enable
-  
-  branch_bgp_route_maps:
+  activate6: disable
+  capability_graceful_restart6: disable
+  next_hop_self: enable
+  soft_reconfiguration6: disable
+
+branch_bgp_route_maps:
   Hub01: VPN-DC1-FAIL
   Hub02: VPN-DC2-FAIL
 
-  interhub_ipsec:
+interhub_ipsec:
   ike_version: 2
   peertype: any
   net_device: enable
@@ -156,8 +162,7 @@ bgp:
   psksecret: fortinet
   dpd_retryinterval: 60
 
-
-  branch_route_maps:
+branch_route_maps:
   fail:
     Hub01:
       name: VPN-DC1-FAIL

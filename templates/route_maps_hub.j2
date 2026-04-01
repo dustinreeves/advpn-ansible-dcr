@@ -1,5 +1,5 @@
 config router route-map
-{% for c in community_lists %}
+{% for c in hub_community_lists[inventory_hostname] %}
 {% if c.name != "HUB-FAIL" %}
     edit "RM-{{ c.name }}"
         config rule
@@ -13,7 +13,7 @@ config router route-map
 {% endif %}
 {% endfor %}
 
-{% for c in community_lists %}
+{% for c in hub_community_lists[inventory_hostname] %}
 {% if c.name == "HUB-FAIL" %}
     edit "RM-{{ c.name }}"
         config rule
