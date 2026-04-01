@@ -21,14 +21,12 @@ config router bgp
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}
-            set route-map-out "{{ branch_bgp_route_maps[t.hub] }}"
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
             set additional-path {{ bgp.additional_path_mode }}
             set adv-additional-path {{ bgp.adv_additional_path_branch }}
-            set route-map-out-preferable "{{ t.name }}"
+            set route-map-out "{{ t.name }}"
         next
-
 {% endfor %}
     end
 end
