@@ -1,0 +1,44 @@
+config system zone
+    edit "Data"
+        set interface "{{ lan.interface }}"
+    next
+end
+
+config system sdwan
+    set status enable
+    config members
+{% for t in hub_overlay_interfaces %}
+        edit {{ t.member_id }}
+            set interface "{{ t.name }}"
+            set zone "vpnsdwan"
+        next
+{% endfor %}
+        edit {{ hub_overlay_interfaces | map(attribute='member_id') | max + 1 }}
+            set interface "{{ wan.wan2.interface }}"
+            set zone "inet"
+        next
+        edit {{ hub_overlay_interfaces | map(attribute='member_id') | max + 2 }}
+            set interface "{{ wan.wan1.interface }}"
+            set zone "inet"
+        next
+    end
+
+    config service
+        edit 1
+            set name "{{ hub_sdwan_inet_service.name }}"
+            set dst "{{ hub_sdwan_inet_service.dst }}"
+            set dst-negate {{ hub_sdwan_inet_service.dst_negate }}
+            set src "{{ hub_sdwan_inet_service.src }}"
+            set priority-members {{ hub_overlay_interfaces | map(attribute='member_id') | max + 1 }} {{ hub_overlay_interfaces | map(attribute='member_id') | max + 2 }}
+            set priority-zone "inet"
+        next
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+        edit {{ 50 + loop.index }}
+            set name "SDWAN_{{ t.network_id }}"
+            set route-tag {{ t.network_id }}
+            set src "rfc1918grp"
+            set priority-members {{ t.member_id }}
+        next
+{% endfor %}
+    end
+end

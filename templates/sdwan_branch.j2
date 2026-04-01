@@ -1,0 +1,78 @@
+config system sdwan
+    set status enable
+
+    config zone
+        edit "virtual-wan-link"
+        next
+        edit "inet"
+        next
+        edit "vpnsdwan"
+        next
+    end
+
+    config members
+{% for t in tunnel_matrix %}
+        edit {{ loop.index }}
+            set interface "{{ t.name }}"
+            set zone "vpnsdwan"
+        next
+{% endfor %}
+        edit {{ tunnel_matrix | length + 1 }}
+            set interface "{{ wan.wan1.interface }}"
+            set zone "inet"
+        next
+        edit {{ tunnel_matrix | length + 2 }}
+            set interface "{{ wan.wan2.interface }}"
+            set zone "inet"
+        next
+    end
+
+    config health-check
+{% for hc in sdwan_health_checks %}
+        edit "{{ hc.name }}"
+            set server "{{ hc.server }}"
+            set members {{ hc.members | join(' ') }}
+            config sla
+                edit 1
+                    set packetloss-threshold {{ hc.packetloss_threshold }}
+                next
+            end
+        next
+{% endfor %}
+    end
+
+    config service
+{% for svc in sdwan_services %}
+        edit {{ loop.index }}
+            set name "{{ svc.name }}"
+            set mode priority
+            set dst "all"
+            set src "all"
+            set health-check "{{ svc.health_check }}"
+            set link-cost-factor packet-loss
+            set priority-members {{ svc.priority_members | join(' ') }}
+        next
+{% endfor %}
+        edit {{ sdwan_services | length + 1 }}
+            set name "{{ sdwan_inet_service.name }}"
+            set dst "{{ sdwan_inet_service.dst }}"
+            set dst-negate {{ sdwan_inet_service.dst_negate }}
+            set src "{{ sdwan_inet_service.src }}"
+            set priority-zone "inet"
+            set priority-members {{ tunnel_matrix | length + 1 }} {{ tunnel_matrix | length + 2 }}
+        next
+    end
+end
+
+config system zone
+    edit "Data"
+        set interface "{{ lan.interface }}"
+    next
+end
+
+config router static
+    edit 1
+        set distance 1
+        set sdwan-zone "inet"
+    next
+end

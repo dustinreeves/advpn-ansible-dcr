@@ -1,0 +1,56 @@
+config vpn ipsec phase1-interface
+    edit "{{ interhub.tunnel_name }}"
+        set interface "{{ interhub.parent_interface }}"
+        set ike-version {{ interhub_ipsec.ike_version }}
+        set peertype {{ interhub_ipsec.peertype }}
+        set net-device {{ interhub_ipsec.net_device }}
+        set proposal {{ interhub_ipsec.proposal }}
+        set add-route {{ interhub_ipsec.add_route }}
+        set localid "{{ interhub.localid }}"
+        set remote-gw {{ interhub.remote_gw }}
+        set dpd {{ interhub_ipsec.dpd }}
+        set npu-offload {{ interhub_ipsec.npu_offload }}
+        set dhgrp {{ interhub_ipsec.dhgrp }}
+        set psksecret {{ interhub_ipsec.psksecret }}
+        set dpd-retryinterval {{ interhub_ipsec.dpd_retryinterval }}
+    next
+end
+
+config system interface
+    edit "{{ interhub.tunnel_name }}"
+        set ip {{ interhub.tunnel_ip }}
+        set allowaccess ping
+        set type tunnel
+        set interface "{{ interhub.parent_interface }}"
+    next
+end
+
+config vpn ipsec phase2-interface
+    edit "{{ interhub.phase2_name }}"
+        set phase1name "{{ interhub.tunnel_name }}"
+        set proposal {{ interhub_ipsec.proposal }}
+        set src-subnet {{ interhub.tunnel_ip }}
+        set dst-subnet {{ interhub.remote_tunnel_ip }}
+    next
+end
+
+config router static
+    edit 20
+        set dst {{ interhub.remote_tunnel_ip }}
+        set device "{{ interhub.tunnel_name }}"
+    next
+end
+
+config firewall policy
+    edit 20
+        set name "{{ interhub.policy_name }}"
+        set srcintf "{{ interhub.tunnel_name }}"
+        set dstintf "{{ interhub.tunnel_name }}"
+        set srcaddr "all"
+        set dstaddr "all"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set logtraffic all
+    next
+end

@@ -1,0 +1,200 @@
+ike_version: 2
+proposal: "des-md5 des-sha1"
+dhgrp: "19 14"
+psksecret: fortinet
+
+net_device: enable
+mode_cfg: enable
+add_route: disable
+auto_discovery_receiver: enable
+auto_discovery_shortcuts: dependent
+network_overlay: enable
+
+phase2:
+  proposal: "des-md5 des-sha1"
+  dhgrp: "19 14"
+  auto_negotiate: enable
+  keylifeseconds: 43200
+  src_subnet: "0.0.0.0 0.0.0.0"
+  dst_subnet: "0.0.0.0 0.0.0.0"
+
+tunnel_matrix:
+  - name: wan1-vpn1
+    branch_wan: wan1
+    hub: Hub01
+    hub_wan: wan1
+    network_id: 1
+
+  - name: wan1-vpn2
+    branch_wan: wan1
+    hub: Hub01
+    hub_wan: wan2
+    network_id: 2
+
+  - name: wan2-vpn3
+    branch_wan: wan2
+    hub: Hub01
+    hub_wan: wan1
+    network_id: 3
+
+  - name: wan2-vpn4
+    branch_wan: wan2
+    hub: Hub01
+    hub_wan: wan2
+    network_id: 4
+
+  - name: wan1-vpn5
+    branch_wan: wan1
+    hub: Hub02
+    hub_wan: wan1
+    network_id: 5
+
+  - name: wan1-vpn6
+    branch_wan: wan1
+    hub: Hub02
+    hub_wan: wan2
+    network_id: 6
+
+  - name: wan2-vpn7
+    branch_wan: wan2
+    hub: Hub02
+    hub_wan: wan1
+    network_id: 7
+
+  - name: wan2-vpn8
+    branch_wan: wan2
+    hub: Hub02
+    hub_wan: wan2
+    network_id: 8
+
+sdwan_health_checks:
+  - name: dc01
+    server: 10.250.0.1
+    members: [1, 2, 3, 4]
+    packetloss_threshold: 5
+
+  - name: dc02
+    server: 10.250.0.2
+    members: [5, 6, 7, 8]
+    packetloss_threshold: 5
+
+sdwan_services:
+  - name: DC01
+    health_check: dc01
+    priority_members: [1, 2, 3, 4]
+
+  - name: DC02
+    health_check: dc02
+    priority_members: [5, 6, 7, 8]
+
+sdwan_inet_service:
+  name: inet
+  src: rfc1918grp
+  dst: rfc1918grp
+  dst_negate: enable
+
+  hub_sdwan_inet_service:
+  name: Generic_INET
+  src: rfc1918grp
+  dst: rfc1918grp
+  dst_negate: enable
+
+hub_sdwan_route_services:
+  - name: SDWAN_1
+    route_tag: 1
+    src: rfc1918grp
+    priority_members: [1]
+
+  - name: SDWAN_2
+    route_tag: 2
+    src: rfc1918grp
+    priority_members: [2]
+
+  - name: SDWAN_3
+    route_tag: 3
+    src: rfc1918grp
+    priority_members: [3]
+
+  - name: SDWAN_4
+    route_tag: 4
+    src: rfc1918grp
+    priority_members: [4]
+bgp:
+  asn: 65152
+  ebgp_multipath: enable
+  ibgp_multipath: enable
+  additional_path: enable
+  recursive_next_hop: enable
+  tag_resolve_mode: merge
+  graceful_restart: enable
+  additional_path_select: 4
+
+  advertisement_interval: 1
+  link_down_failover: enable
+  soft_reconfiguration: enable
+  remote_as: 65152
+  keep_alive_timer: 1
+  holdtime_timer: 3
+  connect_timer: 1
+  additional_path_mode: both
+  adv_additional_path: 8
+  route_reflector_client: enable
+  
+  branch_bgp_route_maps:
+  Hub01: VPN-DC1-FAIL
+  Hub02: VPN-DC2-FAIL
+
+  interhub_ipsec:
+  ike_version: 2
+  peertype: any
+  net_device: enable
+  proposal: "des-md5 des-sha1"
+  add_route: disable
+  dpd: on-idle
+  npu_offload: disable
+  dhgrp: "19 14"
+  psksecret: fortinet
+  dpd_retryinterval: 60
+
+
+  branch_route_maps:
+  fail:
+    Hub01:
+      name: VPN-DC1-FAIL
+      community: "65152:99"
+    Hub02:
+      name: VPN-DC2-FAIL
+      community: "65152:99"
+
+  preferable:
+    - name: wan1-vpn1
+      network_id: 1
+      community: "65152:1"
+
+    - name: wan1-vpn2
+      network_id: 2
+      community: "65152:2"
+
+    - name: wan2-vpn3
+      network_id: 3
+      community: "65152:3"
+
+    - name: wan2-vpn4
+      network_id: 4
+      community: "65152:4"
+
+    - name: wan1-vpn5
+      network_id: 5
+      community: "65152:5"
+
+    - name: wan1-vpn6
+      network_id: 6
+      community: "65152:6"
+
+    - name: wan2-vpn7
+      network_id: 7
+      community: "65152:7"
+
+    - name: wan2-vpn8
+      network_id: 8
+      community: "65152:8"

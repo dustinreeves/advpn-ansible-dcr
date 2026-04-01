@@ -1,0 +1,26 @@
+config router community-list
+{% for c in hub_community_lists[inventory_hostname] %}
+    edit "{{ c.name }}"
+        config rule
+            edit 1
+                set action permit
+                set match "{{ c.match }}"
+            next
+        end
+    next
+{% endfor %}
+end
+
+config router route-map
+{% for c in hub_community_lists[inventory_hostname] %}
+    edit "RM-{{ c.name }}"
+        config rule
+            edit 1
+                set action permit
+                set match-community "{{ c.name }}"
+                set set-route-tag {{ c.match.split(':')[1] }}
+            next
+        end
+    next
+{% endfor %}
+end

@@ -1,0 +1,11 @@
+config vpn ipsec phase2-interface
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set phase1name "{{ t.name }}"
+        set proposal {{ phase2_proposal }}
+        set dhgrp {{ phase2_dhgrp }}
+        set auto-negotiate {{ phase2_auto_negotiate }}
+        set keylifeseconds {{ phase2_keylifeseconds }}
+    next
+{% endfor %}
+end

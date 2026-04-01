@@ -1,0 +1,7 @@
+config system interface
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set allowaccess ping
+    next
+{% endfor %}
+end

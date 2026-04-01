@@ -1,0 +1,58 @@
+config system global
+    set hostname "{{ site_name }}"
+end
+
+config router static
+    edit 777
+        set dst 172.16.0.0 255.240.0.0
+        set comment "[Created by ansible template blackhole rfc1918]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
+    edit 778
+        set dst 192.168.0.0 255.255.0.0
+        set comment "[Created by ansible template blackhole rfc1918]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
+    edit 779
+        set dst 10.0.0.0 255.0.0.0
+        set comment "[Created by ansible template blackhole rfc1918]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
+end
+
+config firewall address
+    edit "RFC1918-10.0.0.0-8"
+        set subnet 10.0.0.0 255.0.0.0
+    next
+    edit "RFC1918-172.16.0.0-12"
+        set subnet 172.16.0.0 255.240.0.0
+    next
+    edit "RFC1918-192.168.0.0-16"
+        set subnet 192.168.0.0 255.255.0.0
+    next
+end
+
+config firewall addrgrp
+    edit "rfc1918grp"
+        set member "RFC1918-10.0.0.0-8" "RFC1918-172.16.0.0-12" "RFC1918-192.168.0.0-16"
+    next
+end
+
+config system interface
+{% if lan is defined %}
+    edit "{{ lan.interface }}"
+        set allowaccess ping https ssh
+    next
+{% endif %}
+{% for wan_name, wan_data in wan.items() %}
+    edit "{{ wan_data.interface }}"
+        set allowaccess ping
+    next
+{% endfor %}
+end

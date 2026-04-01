@@ -1,0 +1,72 @@
+config router bgp
+    set as {{ bgp.asn }}
+    set ebgp-multipath {{ bgp.ebgp_multipath }}
+    set ibgp-multipath {{ bgp.ibgp_multipath }}
+    set additional-path {{ bgp.additional_path }}
+    set recursive-next-hop {{ bgp.recursive_next_hop }}
+    set tag-resolve-mode {{ bgp.tag_resolve_mode }}
+    set graceful-restart {{ bgp.graceful_restart }}
+    set additional-path-select {{ bgp.additional_path_select }}
+
+    config neighbor-group
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+        edit "VPN{{ t.network_id }}"
+            set advertisement-interval {{ bgp.advertisement_interval }}
+            set link-down-failover {{ bgp.link_down_failover }}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set interface "{{ t.name }}"
+            set remote-as {{ bgp.remote_as }}
+            set keep-alive-timer {{ bgp.keep_alive_timer }}
+            set holdtime-timer {{ bgp.holdtime_timer }}
+            set connect-timer {{ bgp.connect_timer }}
+            set update-source "{{ t.name }}"
+            set additional-path {{ bgp.additional_path_mode }}
+            set adv-additional-path {{ bgp.adv_additional_path }}
+            set route-reflector-client {{ bgp.route_reflector_client }}
+            set route-map-in "RM-HUB-{{ t.network_id }}"
+        next
+{% endfor %}
+    end
+
+    config neighbor-range
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+        edit {{ loop.index }}
+            set prefix {{ t.overlay_subnet }}
+            set neighbor-group "VPN{{ t.network_id }}"
+        next
+{% endfor %}
+    end
+
+    config network
+        edit 1
+            set prefix {{ lan.subnet }}
+        next
+    end
+
+    config network6
+        edit 1
+            set prefix6 ::/128
+        next
+    end
+
+    config redistribute "connected"
+    end
+    config redistribute "rip"
+    end
+    config redistribute "ospf"
+    end
+    config redistribute "static"
+    end
+    config redistribute "isis"
+    end
+    config redistribute6 "connected"
+    end
+    config redistribute6 "rip"
+    end
+    config redistribute6 "ospf"
+    end
+    config redistribute6 "static"
+    end
+    config redistribute6 "isis"
+    end
+end

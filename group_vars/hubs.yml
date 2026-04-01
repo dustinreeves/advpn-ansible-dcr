@@ -1,0 +1,26 @@
+device_role: hub
+
+hub_community_lists:
+  Hub01:
+    - name: HUB-1
+      match: "65152:1"
+    - name: HUB-2
+      match: "65152:2"
+    - name: HUB-3
+      match: "65152:3"
+    - name: HUB-4
+      match: "65152:4"
+    - name: HUB-FAIL
+      match: "65152:99"
+
+  Hub02:
+    - name: HUB-5
+      match: "65152:5"
+    - name: HUB-6
+      match: "65152:6"
+    - name: HUB-7
+      match: "65152:7"
+    - name: HUB-8
+      match: "65152:8"
+    - name: HUB-FAIL
+      match: "65152:99"

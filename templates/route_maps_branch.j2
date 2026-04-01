@@ -1,0 +1,23 @@
+config router route-map
+{% for hub_name, fail_map in branch_route_maps.fail.items() %}
+    edit "{{ fail_map.name }}"
+        config rule
+            edit 1
+                set action permit
+                set set-community "{{ fail_map.community }}"
+            next
+        end
+    next
+{% endfor %}
+
+{% for rm in branch_route_maps.preferable %}
+    edit "{{ rm.name }}"
+        config rule
+            edit 1
+                set action permit
+                set set-community "{{ rm.community }}"
+            next
+        end
+    next
+{% endfor %}
+end

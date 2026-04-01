@@ -1,0 +1,14 @@
+config system interface
+{% if lan is defined %}
+    edit "{{ lan.interface }}"
+        set ip {{ lan.ip }}
+    next
+{% endif %}
+{% for wan_name, wan_data in wan.items() %}
+{% if wan_data.ip is defined %}
+    edit "{{ wan_data.interface }}"
+        set ip {{ wan_data.ip }}
+    next
+{% endif %}
+{% endfor %}
+end

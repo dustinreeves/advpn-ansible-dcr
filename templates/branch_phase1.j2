@@ -1,0 +1,21 @@
+config vpn ipsec phase1-interface
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set interface "{{ wan[t.branch_wan].interface }}"
+        set ike-version {{ ike_version }}
+        set peertype any
+        set net-device {{ net_device }}
+        set mode-cfg {{ mode_cfg }}
+        set proposal {{ proposal }}
+        set add-route {{ add_route }}
+        set localid "{{ site_slug }}-{{ t.network_id }}"
+        set dhgrp {{ dhgrp }}
+        set auto-discovery-receiver {{ auto_discovery_receiver }}
+        set auto-discovery-shortcuts {{ auto_discovery_shortcuts }}
+        set network-overlay {{ network_overlay }}
+        set network-id {{ t.network_id }}
+        set remote-gw {{ hubs[t.hub][t.hub_wan ~ '_gw'] }}
+        set psksecret {{ psksecret }}
+    next
+{% endfor %}
+end

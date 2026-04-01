@@ -1,0 +1,29 @@
+config router route-map
+{% for c in community_lists %}
+{% if c.name != "HUB-FAIL" %}
+    edit "RM-{{ c.name }}"
+        config rule
+            edit 1
+                set action permit
+                set match-community "{{ c.name }}"
+                set set-route-tag {{ c.match.split(':')[1] }}
+            next
+        end
+    next
+{% endif %}
+{% endfor %}
+
+{% for c in community_lists %}
+{% if c.name == "HUB-FAIL" %}
+    edit "RM-{{ c.name }}"
+        config rule
+            edit 1
+                set action permit
+                set match-community "{{ c.name }}"
+                set set-route-tag 99
+            next
+        end
+    next
+{% endif %}
+{% endfor %}
+end
