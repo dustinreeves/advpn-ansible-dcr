@@ -93,6 +93,16 @@ config firewall policy
         set service "ALL"
     next
     edit 0
+        set name "vpnsdwan-to-lo-bgp"
+        set srcintf "vpnsdwan"
+        set dstintf "{{ lo_bgp.interface }}"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
         set name "vpnsdwan-to-Data"
         set srcintf "vpnsdwan"
         set dstintf "Data"
