@@ -69,12 +69,12 @@ tunnel_matrix:
 
 sdwan_health_checks:
   - name: dc01
-    server: 10.250.0.1
+    server: 10.255.0.1
     members: [1, 2, 3, 4]
     packetloss_threshold: 5
 
   - name: dc02
-    server: 10.250.0.2
+    server: 10.255.0.2
     members: [5, 6, 7, 8]
     packetloss_threshold: 5
 

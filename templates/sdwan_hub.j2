@@ -87,7 +87,7 @@ config firewall policy
     edit 0
         set name "vpnsdwan-to-loopback"
         set srcintf "vpnsdwan"
-        set dstintf "loopbacksdwan"
+        set dstintf "{{ lo_hc.interface }}"
         set action accept
         set srcaddr "all"
         set dstaddr "all"

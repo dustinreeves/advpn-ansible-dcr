@@ -9,7 +9,7 @@ config system interface
         set status up
     next
 {% endif %}
-{% if device_role == "branch" and lo_hc is defined %}
+{% if lo_hc is defined %}
     edit "{{ lo_hc.interface }}"
         set vdom "root"
         set ip {{ lo_hc.ip }}

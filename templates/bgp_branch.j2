@@ -34,9 +34,9 @@ config router bgp
         edit 1
             set prefix {{ lan.subnet }}
         next
-{% if lo_hc is defined and lo_hc.subnet is defined %}
+{% if lo_hc is defined and lo_hc.ip is defined %}
         edit 2
-            set prefix {{ lo_hc.subnet }}
+            set prefix {{ lo_hc.ip }}
         next
 {% endif %}
     end
