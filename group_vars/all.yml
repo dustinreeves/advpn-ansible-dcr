@@ -21,49 +21,49 @@ phase2:
 tunnel_matrix:
   - name: wan1-vpn1
     branch_wan: wan1
-    hub: ftw
+    hub: dallas
     hub_wan: wan1
     network_id: 1
 
   - name: wan1-vpn2
     branch_wan: wan1
-    hub: ftw
+    hub: dallas
     hub_wan: wan2
     network_id: 2
 
   - name: wan2-vpn3
     branch_wan: wan2
-    hub: ftw
+    hub: dallas
     hub_wan: wan1
     network_id: 3
 
   - name: wan2-vpn4
     branch_wan: wan2
-    hub: ftw
+    hub: dallas
     hub_wan: wan2
     network_id: 4
 
   - name: wan1-vpn5
     branch_wan: wan1
-    hub: boulder
+    hub: chicago
     hub_wan: wan1
     network_id: 5
 
   - name: wan1-vpn6
     branch_wan: wan1
-    hub: boulder
+    hub: chicago
     hub_wan: wan2
     network_id: 6
 
   - name: wan2-vpn7
     branch_wan: wan2
-    hub: boulder
+    hub: chicago
     hub_wan: wan1
     network_id: 7
 
   - name: wan2-vpn8
     branch_wan: wan2
-    hub: boulder
+    hub: chicago
     hub_wan: wan2
     network_id: 8
 
@@ -147,8 +147,8 @@ bgp:
   soft_reconfiguration6: disable
 
 branch_bgp_route_maps:
-  ftw: VPN-FTW-FAIL
-  boulder: VPN-BOULDER-FAIL
+  dallas: VPN-DALLAS-FAIL
+  chicago: VPN-CHICAGO-FAIL
 
 interhub_ipsec:
   ike_version: 2
@@ -164,11 +164,11 @@ interhub_ipsec:
 
 branch_route_maps:
   fail:
-    ftw:
-      name: VPN-FTW-FAIL
+    dallas:
+      name: VPN-DALLAS-FAIL
       community: "65152:99"
-    boulder:
-      name: VPN-BOULDER-FAIL
+    chicago:
+      name: VPN-CHICAGO-FAIL
       community: "65152:99"
 
   preferable:

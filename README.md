@@ -48,10 +48,10 @@ The following errors were corrected:
 
 3. **Host var filename mismatch with inventory hostnames**
    - renamed host var files to match case-sensitive inventory names:
-     - `ftw.yml`, `boulder.yml`, `new_york.yml`, `dallas.yml`
+     - `dallas.yml`, `chicago.yml`, `phoenix.yml`, `atlanta.yml`
 
-4. **Missing host vars for `seattle`**
-   - added `host_vars/seattle.yml`
+4. **Missing host vars for `denver`**
+   - added `host_vars/denver.yml`
 
 5. **Incorrect YAML nesting in `group_vars/all.yml`**
    - moved these to correct top-level keys:
@@ -89,8 +89,8 @@ The following errors were corrected:
 ### Variable files
 
 - Global: `group_vars/all.yml`
-- Hubs role: `group_vars/hub_devices.yml` (hosts: `ftw`, `boulder`)
-- Branch role: `group_vars/branch_devices.yml` (hosts: `new_york`, `dallas`, `seattle`)
+- Hubs role: `group_vars/hub_devices.yml` (hosts: `dallas`, `chicago`)
+- Branch role: `group_vars/branch_devices.yml` (hosts: `phoenix`, `atlanta`, `denver`)
 - Per-host: `host_vars/<inventory_hostname>.yml`
 
 ---
@@ -100,6 +100,26 @@ The following errors were corrected:
 ```bash
 ansible-playbook -i inventory.yml playbook.yml
 ```
+
+## Host vars interactive wizard
+
+If you want a command that asks for all site variables (WAN IPs, site name, etc.) and pre-fills defaults from an existing host template, use:
+
+```bash
+python3 scripts/host_vars_wizard.py
+```
+
+You can also run it non-interactively for template selection/output naming:
+
+```bash
+python3 scripts/host_vars_wizard.py --template phoenix --output atlanta
+```
+
+How it works:
+- Reads an existing `host_vars/<template>.yml` as the source of defaults.
+- Prompts for every variable path and shows the current value in brackets.
+- Press Enter to keep any default.
+- Writes the new host vars file to `host_vars/<output>.yml`.
 
 Optional dry checks:
 
@@ -114,8 +134,8 @@ for every host before rendering templates. This catches missing keys early
 `hub_overlay_interfaces`).
 
 Keep `host_vars/` aligned to inventory hostnames only. Files in `host_vars/`
-must exactly match `inventory.yml` host keys (`ftw`, `boulder`, `new_york`,
-`dallas`, `seattle`) to avoid stale or misleading variable definitions.
+must exactly match `inventory.yml` host keys (`dallas`, `chicago`, `phoenix`,
+`atlanta`, `denver`) to avoid stale or misleading variable definitions.
 
 ---
 
