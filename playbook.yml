@@ -79,6 +79,20 @@
       when: device_role == "hub"
       delegate_to: localhost
 
+    - name: Validate branch required variables
+      ansible.builtin.assert:
+        that:
+          - lan.subnet is defined
+          - lan.dhcp_start is defined
+          - lan.dhcp_end is defined
+          - lo_hc is defined
+          - lo_hc.interface is defined
+          - lo_hc.ip is defined
+          - lo_hc.subnet is defined
+        fail_msg: "Missing required branch variables for {{ inventory_hostname }}."
+      when: device_role == "branch"
+      delegate_to: localhost
+
   tasks:
     - name: Render baseline config
       ansible.builtin.template:

@@ -1,5 +1,12 @@
 config system global
-    set hostname "{{ normalized_hostname }}"
+    set hostname "{{ fgt_hostname | default(normalized_hostname) }}"
+    set admintimeout 0
+end
+
+config system admin
+    edit "admin"
+        set password "{{ admin_password | default('pass') }}"
+    next
 end
 
 config router static
@@ -43,4 +50,3 @@ config firewall addrgrp
         set member "RFC1918-10.0.0.0-8" "RFC1918-172.16.0.0-12" "RFC1918-192.168.0.0-16"
     next
 end
-

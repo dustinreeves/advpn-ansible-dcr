@@ -2,17 +2,50 @@ config system interface
 {% if lan is defined %}
     edit "{{ lan.interface }}"
         set mode static
+        set alias "lan"
         set ip {{ lan.ip }}
-        set allowaccess ping http https ssh
+        set allowaccess ping https ssh
+        set role lan
+        set status up
+    next
+{% endif %}
+{% if device_role == "branch" and lo_hc is defined %}
+    edit "{{ lo_hc.interface }}"
+        set vdom "root"
+        set ip {{ lo_hc.ip }}
+        set allowaccess ping
+        set type loopback
     next
 {% endif %}
 {% for wan_name, wan_data in wan.items() %}
     edit "{{ wan_data.interface }}"
+        set alias "{{ wan_name }}"
 {% if wan_data.ip is defined %}
         set mode static
         set ip {{ wan_data.ip }}
+{% else %}
+        set mode dhcp
 {% endif %}
-        set allowaccess ping http https ssh
+        set role wan
+        set allowaccess ping https ssh
+        set status up
     next
 {% endfor %}
 end
+
+{% if lan.dhcp_start is defined and lan.dhcp_end is defined %}
+config system dhcp server
+    edit 0
+        set interface "{{ lan.interface }}"
+        set default-gateway {{ lan.ip.split()[0] }}
+        set netmask {{ lan.ip.split()[1] }}
+        set dns-service default
+        config ip-range
+            edit 1
+                set start-ip {{ lan.dhcp_start }}
+                set end-ip {{ lan.dhcp_end }}
+            next
+        end
+    next
+end
+{% endif %}
