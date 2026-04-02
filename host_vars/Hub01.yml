@@ -1,0 +1,62 @@
+site_name: Hub01
+site_slug: hub1
+
+lan:
+  interface: port1
+  ip: 10.101.1.1 255.255.255.0
+  subnet: 10.101.1.0 255.255.255.0
+
+wan:
+  wan1:
+    interface: port10
+    ip: 100.64.0.2 255.255.255.255
+  wan2:
+    interface: port9
+    ip: 100.65.0.2 255.255.255.255
+
+hub_overlay_interfaces:
+  - name: hub1-wan1-vpn1
+    member_id: 1
+    underlay_wan: wan1
+    network_id: 1
+    overlay_subnet: 10.250.1.0 255.255.255.0
+
+  - name: hub1-wan2-vpn2
+    member_id: 3
+    underlay_wan: wan2
+    network_id: 2
+    overlay_subnet: 10.250.2.0 255.255.255.0
+
+  - name: hub1-wan1-vpn3
+    member_id: 2
+    underlay_wan: wan1
+    network_id: 3
+    overlay_subnet: 10.250.3.0 255.255.255.0
+
+  - name: hub1-wan2-vpn4
+    member_id: 4
+    underlay_wan: wan2
+    network_id: 4
+    overlay_subnet: 10.250.4.0 255.255.255.0
+
+interhub:
+  tunnel_name: hub1-hub2
+  phase2_name: hub1-hub2-p2
+  policy_name: hub1-hub2-link
+  parent_interface: port10
+  localid: Hub01
+  remote_gw: 100.64.0.6
+  tunnel_ip: 10.254.254.1 255.255.255.255
+  remote_tunnel_ip: 10.254.254.2 255.255.255.255
+
+  community_lists:
+  - name: HUB-1
+    match: "65152:1"
+  - name: HUB-2
+    match: "65152:2"
+  - name: HUB-3
+    match: "65152:3"
+  - name: HUB-4
+    match: "65152:4"
+  - name: HUB-FAIL
+    match: "65152:99"
