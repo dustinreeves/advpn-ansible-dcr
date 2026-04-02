@@ -6,7 +6,7 @@ all:
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
 
     hubs:
-      Hub01:
+      ftw:
         wan1_gw: 100.64.0.2
         wan2_gw: 100.65.0.2
         vpn_ids:
@@ -17,7 +17,7 @@ all:
             - 2
             - 4
 
-      Hub02:
+      boulder:
         wan1_gw: 100.64.0.6
         wan2_gw: 100.65.0.6
         vpn_ids:
@@ -31,16 +31,16 @@ all:
   children:
     hub_devices:
       hosts:
-        Hub01:
+        ftw:
           ansible_host: 192.168.122.11
-        Hub02:
+        boulder:
           ansible_host: 192.168.122.12
 
     branch_devices:
       hosts:
-        Kingsgate:
+        new_york:
           ansible_host: 192.168.122.21
-        Frisco:
+        dallas:
           ansible_host: 192.168.122.22
-        Abilene:
+        seattle:
           ansible_host: 192.168.122.23

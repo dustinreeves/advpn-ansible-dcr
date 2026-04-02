@@ -21,49 +21,49 @@ phase2:
 tunnel_matrix:
   - name: wan1-vpn1
     branch_wan: wan1
-    hub: Hub01
+    hub: ftw
     hub_wan: wan1
     network_id: 1
 
   - name: wan1-vpn2
     branch_wan: wan1
-    hub: Hub01
+    hub: ftw
     hub_wan: wan2
     network_id: 2
 
   - name: wan2-vpn3
     branch_wan: wan2
-    hub: Hub01
+    hub: ftw
     hub_wan: wan1
     network_id: 3
 
   - name: wan2-vpn4
     branch_wan: wan2
-    hub: Hub01
+    hub: ftw
     hub_wan: wan2
     network_id: 4
 
   - name: wan1-vpn5
     branch_wan: wan1
-    hub: Hub02
+    hub: boulder
     hub_wan: wan1
     network_id: 5
 
   - name: wan1-vpn6
     branch_wan: wan1
-    hub: Hub02
+    hub: boulder
     hub_wan: wan2
     network_id: 6
 
   - name: wan2-vpn7
     branch_wan: wan2
-    hub: Hub02
+    hub: boulder
     hub_wan: wan1
     network_id: 7
 
   - name: wan2-vpn8
     branch_wan: wan2
-    hub: Hub02
+    hub: boulder
     hub_wan: wan2
     network_id: 8
 
@@ -93,7 +93,7 @@ sdwan_inet_service:
   dst: rfc1918grp
   dst_negate: enable
 
-  hub_sdwan_inet_service:
+hub_sdwan_inet_service:
   name: Generic_INET
   src: rfc1918grp
   dst: rfc1918grp
@@ -119,6 +119,7 @@ hub_sdwan_route_services:
     route_tag: 4
     src: rfc1918grp
     priority_members: [4]
+
 bgp:
   asn: 65152
   ebgp_multipath: enable
@@ -138,13 +139,18 @@ bgp:
   connect_timer: 1
   additional_path_mode: both
   adv_additional_path: 8
+  adv_additional_path_branch: 8
   route_reflector_client: enable
-  
-  branch_bgp_route_maps:
-  Hub01: VPN-DC1-FAIL
-  Hub02: VPN-DC2-FAIL
+  activate6: disable
+  capability_graceful_restart6: disable
+  next_hop_self: enable
+  soft_reconfiguration6: disable
 
-  interhub_ipsec:
+branch_bgp_route_maps:
+  ftw: VPN-FTW-FAIL
+  boulder: VPN-BOULDER-FAIL
+
+interhub_ipsec:
   ike_version: 2
   peertype: any
   net_device: enable
@@ -156,14 +162,13 @@ bgp:
   psksecret: fortinet
   dpd_retryinterval: 60
 
-
-  branch_route_maps:
+branch_route_maps:
   fail:
-    Hub01:
-      name: VPN-DC1-FAIL
+    ftw:
+      name: VPN-FTW-FAIL
       community: "65152:99"
-    Hub02:
-      name: VPN-DC2-FAIL
+    boulder:
+      name: VPN-BOULDER-FAIL
       community: "65152:99"
 
   preferable:

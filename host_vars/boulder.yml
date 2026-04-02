@@ -1,5 +1,5 @@
-site_name: Hub02
-site_slug: hub2
+site_name: boulder, co
+site_slug: boulder
 
 lan:
   interface: port1
@@ -39,27 +39,12 @@ hub_overlay_interfaces:
     network_id: 8
     overlay_subnet: 10.250.8.0 255.255.255.0
 
-
-
 interhub:
-  tunnel_name: hub2-hub1
-  phase2_name: hub2-hub1-p2
-  policy_name: hub2-hub1-link
+  tunnel_name: boulder-ftw
+  phase2_name: boulder-ftw-p2
+  policy_name: boulder-ftw-link
   parent_interface: port10
-  localid: Hub02
+  localid: boulder
   remote_gw: 100.64.0.2
   tunnel_ip: 10.254.254.2 255.255.255.255
   remote_tunnel_ip: 10.254.254.1 255.255.255.255
-
-
-  community_lists:
-  - name: HUB-5
-    match: "65152:5"
-  - name: HUB-6
-    match: "65152:6"
-  - name: HUB-7
-    match: "65152:7"
-  - name: HUB-8
-    match: "65152:8"
-  - name: HUB-FAIL
-    match: "65152:99"

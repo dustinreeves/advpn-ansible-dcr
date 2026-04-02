@@ -1,0 +1,20 @@
+config vpn ipsec phase1-interface
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+    edit "{{ t.name }}"
+        set interface "{{ wan[t.underlay_wan].interface }}"
+        set ike-version {{ ike_version }}
+        set peertype any
+        set net-device {{ net_device }}
+        set mode-cfg {{ mode_cfg }}
+        set proposal {{ proposal }}
+        set add-route {{ add_route }}
+        set localid "{{ site_slug }}-{{ t.network_id }}"
+        set dhgrp {{ dhgrp }}
+        set auto-discovery-sender enable
+        set auto-discovery-forwarder enable
+        set network-overlay {{ network_overlay }}
+        set network-id {{ t.network_id }}
+        set psksecret {{ psksecret }}
+    next
+{% endfor %}
+end

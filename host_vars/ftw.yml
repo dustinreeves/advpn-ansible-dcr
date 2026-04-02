@@ -1,5 +1,5 @@
-site_name: Hub01
-site_slug: hub1
+site_name: ftw, tx
+site_slug: ftw
 
 lan:
   interface: port1
@@ -40,23 +40,11 @@ hub_overlay_interfaces:
     overlay_subnet: 10.250.4.0 255.255.255.0
 
 interhub:
-  tunnel_name: hub1-hub2
-  phase2_name: hub1-hub2-p2
-  policy_name: hub1-hub2-link
+  tunnel_name: ftw-boulder
+  phase2_name: ftw-boulder-p2
+  policy_name: ftw-boulder-link
   parent_interface: port10
-  localid: Hub01
+  localid: ftw
   remote_gw: 100.64.0.6
   tunnel_ip: 10.254.254.1 255.255.255.255
   remote_tunnel_ip: 10.254.254.2 255.255.255.255
-
-  community_lists:
-  - name: HUB-1
-    match: "65152:1"
-  - name: HUB-2
-    match: "65152:2"
-  - name: HUB-3
-    match: "65152:3"
-  - name: HUB-4
-    match: "65152:4"
-  - name: HUB-FAIL
-    match: "65152:99"
