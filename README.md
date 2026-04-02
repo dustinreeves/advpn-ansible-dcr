@@ -69,6 +69,7 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - Tunnel interface allowaccess behavior.
 - `sdwan_hub.j2` / `sdwan_branch.j2`
   - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
+  - Includes loopback-mode control-plane policies for both `lo.hc` and `lo.bgp` (`vpnsdwan -> loopback`) so BGP-over-loopback sessions are permitted.
 - `bgp_hub.j2` / `bgp_branch.j2`
   - BGP policy and peering model:
     - hubs: neighbor-groups + neighbor-ranges
