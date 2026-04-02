@@ -5,6 +5,7 @@ advpn:
     phoenix: 3
     atlanta: 4
     denver: 5
+    tampa: 6
 
   phase1:
     ike_version: 2
