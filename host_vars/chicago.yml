@@ -1,18 +1,19 @@
 site_name: chicago, il
 site_slug: chicago
+fgt_hostname: Hub02
 
 lan:
   interface: port1
   ip: 10.102.1.1 255.255.255.0
   subnet: 10.102.1.0 255.255.255.0
+  dhcp_start: 10.102.1.100
+  dhcp_end: 10.102.1.199
 
 wan:
   wan1:
     interface: port10
-    ip: 100.64.0.6 255.255.255.255
   wan2:
     interface: port9
-    ip: 100.65.0.6 255.255.255.255
 
 hub_overlay_interfaces:
   - name: hub2-wan1-vpn5

@@ -29,4 +29,15 @@ config router bgp
         next
 {% endfor %}
     end
+
+    config network
+        edit 1
+            set prefix {{ lan.subnet }}
+        next
+{% if lo_hc is defined and lo_hc.subnet is defined %}
+        edit 2
+            set prefix {{ lo_hc.subnet }}
+        next
+{% endif %}
+    end
 end
