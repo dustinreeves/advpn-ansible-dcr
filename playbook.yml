@@ -58,6 +58,26 @@
         render_timestamp: "{{ lookup('pipe', 'date -u +%Y-%m-%d-%H%M%SZ') }}"
       delegate_to: localhost
 
+    - name: Initialize derived preferable branch route-maps
+      ansible.builtin.set_fact:
+        derived_preferable_route_maps: []
+      delegate_to: localhost
+
+    - name: Build derived preferable branch route-maps from tunnels
+      ansible.builtin.set_fact:
+        derived_preferable_route_maps: >-
+          {{
+            derived_preferable_route_maps + [
+              {
+                'name': item.name,
+                'network_id': item.network_id,
+                'community': (advpn.bgp.asn | string) ~ ':' ~ (item.network_id | string)
+              }
+            ]
+          }}
+      loop: "{{ advpn.tunnels | default(tunnel_matrix, true) }}"
+      delegate_to: localhost
+
     - name: Normalize ADVPN variable structure
       ansible.builtin.set_fact:
         ike_version: "{{ advpn.phase1.ike_version | default(ike_version, true) }}"
@@ -67,9 +87,12 @@
         net_device: "{{ advpn.phase1.net_device | default(net_device, true) }}"
         mode_cfg: "{{ advpn.phase1.mode_cfg | default(mode_cfg, true) }}"
         add_route: "{{ advpn.phase1.add_route | default(add_route, true) }}"
+        dpd: "{{ advpn.phase1.dpd | default(dpd, true) }}"
+        dpd_retryinterval: "{{ advpn.phase1.dpd_retryinterval | default(dpd_retryinterval, true) }}"
         auto_discovery_receiver: "{{ advpn.phase1.auto_discovery_receiver | default(auto_discovery_receiver, true) }}"
         auto_discovery_shortcuts: "{{ advpn.phase1.auto_discovery_shortcuts | default(auto_discovery_shortcuts, true) }}"
         network_overlay: "{{ advpn.phase1.network_overlay | default(network_overlay, true) }}"
+        bgp: "{{ advpn.bgp | default(bgp, true) }}"
         phase2: "{{ advpn.phase2 | default(phase2, true) }}"
         tunnel_matrix: "{{ advpn.tunnels | default(tunnel_matrix, true) }}"
         sdwan_health_checks: "{{ advpn.sdwan.branch.health_checks | default(sdwan_health_checks, true) }}"
@@ -94,14 +117,7 @@
                       )
                       else branch_route_maps.preferable
                       if (branch_route_maps is defined and branch_route_maps.preferable is defined)
-                      else [
-                        {
-                          'name': t.name,
-                          'network_id': t.network_id,
-                          'community': (advpn.bgp.asn | string) ~ ':' ~ (t.network_id | string)
-                        }
-                        for t in (advpn.tunnels | default(tunnel_matrix, true))
-                      ]
+                      else derived_preferable_route_maps
                     )
                   )
                 },

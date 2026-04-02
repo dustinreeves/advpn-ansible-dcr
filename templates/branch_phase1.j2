@@ -4,11 +4,22 @@ config vpn ipsec phase1-interface
         set interface "{{ wan[t.branch_wan].interface }}"
         set ike-version {{ ike_version }}
         set peertype any
+{% if bgp.session_mode == "loopback" %}
+        set net-device disable
+{% else %}
         set net-device {{ net_device }}
+{% endif %}
+{% if bgp.session_mode == "loopback" %}
+        set exchange-interface-ip enable
+        set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% else %}
         set mode-cfg {{ mode_cfg }}
+{% endif %}
         set proposal {{ proposal }}
         set add-route {{ add_route }}
         set localid "{{ site_slug }}-{{ t.network_id }}"
+        set dpd {{ dpd }}
+        set dpd-retryinterval {{ dpd_retryinterval }}
         set dhgrp {{ dhgrp }}
         set auto-discovery-receiver {{ auto_discovery_receiver }}
         set auto-discovery-shortcuts {{ auto_discovery_shortcuts }}

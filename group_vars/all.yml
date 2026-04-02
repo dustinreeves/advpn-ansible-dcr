@@ -7,6 +7,8 @@ advpn:
     net_device: enable
     mode_cfg: enable
     add_route: disable
+    dpd: on-idle
+    dpd_retryinterval: 5
     auto_discovery_receiver: enable
     auto_discovery_shortcuts: dependent
     network_overlay: enable
