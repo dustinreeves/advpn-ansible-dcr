@@ -1,4 +1,4 @@
-name: Build ADVPN Ansible Artifacts
+name: Run Ansible and upload artifacts
 
 on:
   push:
@@ -6,13 +6,14 @@ on:
       - main
       - master
       - develop
+      - "**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build-artifacts:
+  run-ansible:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,14 +21,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
-          pip install ansible jinja2 pyyaml
+          pip install ansible
 
       - name: Install Galaxy requirements
         run: |
@@ -35,28 +36,31 @@ jobs:
             ansible-galaxy install -r requirements.yml
           fi
 
-      - name: Syntax check playbook
-        run: |
-          ansible-playbook -i inventory/lab.yml playbooks/site.yml --syntax-check
+      - name: Show Ansible version
+        run: ansible --version
 
-      - name: Create output directory
-        run: mkdir -p output
+      - name: Syntax check
+        run: ansible-playbook -i inventory.yml playbook.yml --syntax-check
 
-      - name: Render configs / generate artifacts
-        run: |
-          ansible-playbook -i inventory/lab.yml playbooks/site.yml \
-            --check \
-            -e artifact_output_dir=output
+      - name: Run playbook
+        run: ansible-playbook -i inventory.yml playbook.yml
 
       - name: Show generated files
         run: |
-          echo "Generated files:"
-          find output -type f | sort
+          echo "Repo contents after playbook run:"
+          find . -type f | sort
 
-      - name: Upload generated artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: advpn-generated-configs
-          path: output/
-          if-no-files-found: error
+          name: ansible-output
+          path: |
+            output/**
+            artifacts/**
+            rendered/**
+            *.cfg
+            *.conf
+            *.txt
+            *.log
+          if-no-files-found: warn
           retention-days: 14
