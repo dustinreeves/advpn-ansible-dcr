@@ -1,4 +1,5 @@
 device_role: hub
+net_device: disable
 
 hub_community_lists:
   dallas:
