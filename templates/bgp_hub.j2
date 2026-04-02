@@ -1,5 +1,6 @@
 config router bgp
     set as {{ bgp.asn }}
+    set router-id {{ lo_bgp.ip.split()[0] }}
     set ebgp-multipath {{ bgp.ebgp_multipath }}
     set ibgp-multipath {{ bgp.ibgp_multipath }}
     set additional-path {{ bgp.additional_path }}

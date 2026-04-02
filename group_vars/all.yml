@@ -75,21 +75,29 @@ advpn:
       health_checks:
         - name: dc01
           server: 10.255.0.1
+          detect_mode: remote
           members: [1, 2, 3, 4]
           packetloss_threshold: 5
 
         - name: dc02
           server: 10.255.0.2
+          detect_mode: remote
           members: [5, 6, 7, 8]
           packetloss_threshold: 5
 
       services:
         - name: DC01
           health_check: dc01
+          mode: sla
+          tie_break: fib-best-match
+          minimum_sla_meet_members: 1
           priority_members: [1, 2, 3, 4]
 
         - name: DC02
           health_check: dc02
+          mode: sla
+          tie_break: fib-best-match
+          minimum_sla_meet_members: 1
           priority_members: [5, 6, 7, 8]
 
       inet_service:
@@ -99,6 +107,8 @@ advpn:
         dst_negate: enable
 
     hub:
+      health_checks: []
+
       inet_service:
         name: Generic_INET
         src: rfc1918grp
@@ -109,21 +119,29 @@ advpn:
         - name: SDWAN_1
           route_tag: 1
           src: rfc1918grp
+          mode: manual
+          tie_break: fib-best-match
           priority_members: [1]
 
         - name: SDWAN_2
           route_tag: 2
           src: rfc1918grp
+          mode: manual
+          tie_break: fib-best-match
           priority_members: [2]
 
         - name: SDWAN_3
           route_tag: 3
           src: rfc1918grp
+          mode: manual
+          tie_break: fib-best-match
           priority_members: [3]
 
         - name: SDWAN_4
           route_tag: 4
           src: rfc1918grp
+          mode: manual
+          tie_break: fib-best-match
           priority_members: [4]
 
   bgp:
