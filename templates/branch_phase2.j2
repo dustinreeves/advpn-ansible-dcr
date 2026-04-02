@@ -6,8 +6,6 @@ config vpn ipsec phase2-interface
         set dhgrp {{ phase2.dhgrp }}
         set auto-negotiate {{ phase2.auto_negotiate }}
         set keylifeseconds {{ phase2.keylifeseconds }}
-        set src-subnet {{ phase2.src_subnet }}
-        set dst-subnet {{ phase2.dst_subnet }}
     next
 {% endfor %}
 end
