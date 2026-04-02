@@ -8,7 +8,6 @@ config system interface
         set allowaccess ping
         set type tunnel
         set remote-ip {{ overlay_prefix }}.254 255.255.255.0
-        set snmp-index {{ t.member_id + 14 }}
         set interface "{{ wan[t.underlay_wan].interface }}"
     next
 {% endfor %}
