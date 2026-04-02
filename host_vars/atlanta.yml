@@ -3,7 +3,7 @@ site_slug: atlanta
 
 lan:
   interface: port1
-  ip: 10.101.20.1 255.255.255.0
+  ip: 10.101.2.1 255.255.255.0
 
 wan:
   wan1:
