@@ -6,6 +6,9 @@ config vpn ipsec phase1-interface
         set interface "{{ wan[t.underlay_wan].interface }}"
         set ike-version {{ ike_version }}
         set peertype any
+{% if bgp.session_mode == "loopback" %}
+        set net-device disable
+{% else %}
         set net-device {{ net_device }}
 {% if bgp.session_mode == "loopback" %}
         set exchange-interface-ip enable
@@ -16,7 +19,7 @@ config vpn ipsec phase1-interface
         set proposal {{ proposal }}
         set add-route {{ add_route }}
         set localid "{{ fgt_hostname }}"
-        set dpd on-idle
+        set dpd {{ dpd }}
         set npu-offload disable
         set dhgrp {{ dhgrp }}
         set auto-discovery-sender enable
@@ -29,7 +32,7 @@ config vpn ipsec phase1-interface
         set ipv4-netmask 255.255.255.0
 {% endif %}
         set psksecret {{ psksecret }}
-        set dpd-retryinterval 60
+        set dpd-retryinterval {{ dpd_retryinterval }}
     next
 {% endfor %}
 end

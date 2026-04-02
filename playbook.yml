@@ -87,6 +87,8 @@
         net_device: "{{ advpn.phase1.net_device | default(net_device, true) }}"
         mode_cfg: "{{ advpn.phase1.mode_cfg | default(mode_cfg, true) }}"
         add_route: "{{ advpn.phase1.add_route | default(add_route, true) }}"
+        dpd: "{{ advpn.phase1.dpd | default(dpd, true) }}"
+        dpd_retryinterval: "{{ advpn.phase1.dpd_retryinterval | default(dpd_retryinterval, true) }}"
         auto_discovery_receiver: "{{ advpn.phase1.auto_discovery_receiver | default(auto_discovery_receiver, true) }}"
         auto_discovery_shortcuts: "{{ advpn.phase1.auto_discovery_shortcuts | default(auto_discovery_shortcuts, true) }}"
         network_overlay: "{{ advpn.phase1.network_overlay | default(network_overlay, true) }}"
