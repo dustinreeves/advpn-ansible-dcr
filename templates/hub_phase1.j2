@@ -1,6 +1,8 @@
 config vpn ipsec phase1-interface
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+{% set overlay_network = t.overlay_subnet.split(' ')[0].split('.') %}
     edit "{{ t.name }}"
+        set type dynamic
         set interface "{{ wan[t.underlay_wan].interface }}"
         set ike-version {{ ike_version }}
         set peertype any
@@ -8,13 +10,19 @@ config vpn ipsec phase1-interface
         set mode-cfg {{ mode_cfg }}
         set proposal {{ proposal }}
         set add-route {{ add_route }}
-        set localid "{{ site_slug }}-{{ t.network_id }}"
+        set localid "{{ fgt_hostname }}"
+        set dpd on-idle
+        set npu-offload disable
         set dhgrp {{ dhgrp }}
         set auto-discovery-sender enable
         set auto-discovery-forwarder enable
         set network-overlay {{ network_overlay }}
         set network-id {{ t.network_id }}
+        set ipv4-start-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.20
+        set ipv4-end-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.250
+        set ipv4-netmask 255.255.255.0
         set psksecret {{ psksecret }}
+        set dpd-retryinterval 60
     next
 {% endfor %}
 end

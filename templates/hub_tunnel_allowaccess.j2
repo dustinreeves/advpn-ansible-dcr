@@ -4,7 +4,6 @@ config system interface
 {% set overlay_prefix = overlay_network.rsplit('.', 1)[0] %}
     edit "{{ t.name }}"
         set vdom "root"
-        set mode static
         set ip {{ overlay_prefix }}.1 255.255.255.255
         set allowaccess ping
         set type tunnel
