@@ -9,6 +9,28 @@ config router bgp
     set tag-resolve-mode {{ bgp.tag_resolve_mode }}
 
     config neighbor
+{% if bgp.session_mode == "loopback" %}
+{% for hub_name in groups['hub_devices'] | sort %}
+{% set neighbor_ip = hostvars[hub_name].lo_bgp.ip.split()[0] %}
+        edit "{{ neighbor_ip }}"
+            set advertisement-interval {{ bgp.advertisement_interval }}
+            set activate6 {{ bgp.activate6 }}
+            set capability-graceful-restart6 {{ bgp.capability_graceful_restart6 }}
+            set link-down-failover {{ bgp.link_down_failover }}
+            set next-hop-self {{ bgp.next_hop_self }}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
+            set ebgp-enforce-multihop enable
+            set update-source "{{ lo_bgp.interface }}"
+            set remote-as {{ bgp.remote_as }}
+            set keep-alive-timer {{ bgp.keep_alive_timer }}
+            set holdtime-timer {{ bgp.holdtime_timer }}
+            set additional-path {{ bgp.additional_path_mode }}
+            set adv-additional-path {{ bgp.adv_additional_path_branch }}
+            set route-map-out "{{ branch_bgp_route_maps[hub_name] }}"
+        next
+{% endfor %}
+{% else %}
 {% for t in tunnel_matrix %}
 {% set neighbor_ip = "10.250." ~ t.network_id ~ ".1" %}
         edit "{{ neighbor_ip }}"
@@ -28,15 +50,16 @@ config router bgp
             set route-map-out "{{ t.name }}"
         next
 {% endfor %}
+{% endif %}
     end
 
     config network
         edit 1
             set prefix {{ lan.subnet }}
         next
-{% if lo_hc is defined and lo_hc.ip is defined %}
+{% if lo_bgp is defined and lo_bgp.ip is defined %}
         edit 2
-            set prefix {{ lo_hc.ip }}
+            set prefix {{ lo_bgp.ip }}
         next
 {% endif %}
     end

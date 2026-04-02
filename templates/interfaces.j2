@@ -17,6 +17,14 @@ config system interface
         set type loopback
     next
 {% endif %}
+{% if lo_bgp is defined %}
+    edit "{{ lo_bgp.interface }}"
+        set vdom "root"
+        set ip {{ lo_bgp.ip }}
+        set allowaccess ping
+        set type loopback
+    next
+{% endif %}
 {% for wan_name, wan_data in wan.items() %}
     edit "{{ wan_data.interface }}"
         set alias "{{ wan_name }}"

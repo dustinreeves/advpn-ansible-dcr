@@ -20,6 +20,9 @@
           - lan is defined
           - lan.interface is defined
           - lan.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
           - wan is defined
           - wan.wan1 is defined
           - wan.wan1.interface is defined
@@ -27,6 +30,9 @@
           - wan.wan2.interface is defined
           - device_role is defined
           - device_role in ["hub", "branch"]
+          - bgp is defined
+          - bgp.session_mode is defined
+          - bgp.session_mode in ["per_overlay", "loopback"]
         fail_msg: "Missing required common variables for {{ inventory_hostname }}."
       delegate_to: localhost
 
@@ -43,6 +49,85 @@
             )
           }}
         render_timestamp: "{{ lookup('pipe', 'date -u +%Y-%m-%d-%H%M%SZ') }}"
+      delegate_to: localhost
+
+    - name: Normalize ADVPN variable structure
+      ansible.builtin.set_fact:
+        ike_version: "{{ advpn.phase1.ike_version | default(ike_version, true) }}"
+        proposal: "{{ advpn.phase1.proposal | default(proposal, true) }}"
+        dhgrp: "{{ advpn.phase1.dhgrp | default(dhgrp, true) }}"
+        psksecret: "{{ advpn.phase1.psksecret | default(psksecret, true) }}"
+        net_device: "{{ advpn.phase1.net_device | default(net_device, true) }}"
+        mode_cfg: "{{ advpn.phase1.mode_cfg | default(mode_cfg, true) }}"
+        add_route: "{{ advpn.phase1.add_route | default(add_route, true) }}"
+        auto_discovery_receiver: "{{ advpn.phase1.auto_discovery_receiver | default(auto_discovery_receiver, true) }}"
+        auto_discovery_shortcuts: "{{ advpn.phase1.auto_discovery_shortcuts | default(auto_discovery_shortcuts, true) }}"
+        network_overlay: "{{ advpn.phase1.network_overlay | default(network_overlay, true) }}"
+        phase2: "{{ advpn.phase2 | default(phase2, true) }}"
+        tunnel_matrix: "{{ advpn.tunnels | default(tunnel_matrix, true) }}"
+        sdwan_health_checks: "{{ advpn.sdwan.branch.health_checks | default(sdwan_health_checks, true) }}"
+        sdwan_services: "{{ advpn.sdwan.branch.services | default(sdwan_services, true) }}"
+        sdwan_inet_service: "{{ advpn.sdwan.branch.inet_service | default(sdwan_inet_service, true) }}"
+        hub_sdwan_inet_service: "{{ advpn.sdwan.hub.inet_service | default(hub_sdwan_inet_service, true) }}"
+        hub_sdwan_route_services: "{{ advpn.sdwan.hub.route_services | default(hub_sdwan_route_services, true) }}"
+        branch_route_maps: >-
+          {{
+            advpn.branch.route_maps
+            | default(branch_route_maps, true)
+            | combine(
+                {
+                  'preferable': (
+                    (
+                      advpn.branch.route_maps.preferable
+                      if (
+                        advpn is defined and
+                        advpn.branch is defined and
+                        advpn.branch.route_maps is defined and
+                        advpn.branch.route_maps.preferable is defined
+                      )
+                      else branch_route_maps.preferable
+                      if (branch_route_maps is defined and branch_route_maps.preferable is defined)
+                      else [
+                        {
+                          'name': t.name,
+                          'network_id': t.network_id,
+                          'community': (advpn.bgp.asn | string) ~ ':' ~ (t.network_id | string)
+                        }
+                        for t in (advpn.tunnels | default(tunnel_matrix, true))
+                      ]
+                    )
+                  )
+                },
+                recursive=True
+              )
+          }}
+        interhub_ipsec: "{{ advpn.interhub_ipsec | default(interhub_ipsec, true) }}"
+      delegate_to: localhost
+
+    - name: Derive branch BGP route-map names from fail route-map definitions
+      ansible.builtin.set_fact:
+        branch_bgp_route_maps: >-
+          {{
+            advpn.branch.bgp_route_maps
+            if (
+              advpn is defined and
+              advpn.branch is defined and
+              advpn.branch.bgp_route_maps is defined
+            )
+            else dict(
+              (
+                branch_route_maps.fail
+                | dict2items
+                | map(attribute='key')
+                | zip(
+                    branch_route_maps.fail
+                    | dict2items
+                    | map(attribute='value')
+                    | map(attribute='name')
+                  )
+              )
+            )
+          }}
       delegate_to: localhost
 
     - name: Validate normalized hostname
@@ -78,6 +163,9 @@
           - lo_hc is defined
           - lo_hc.interface is defined
           - lo_hc.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
         fail_msg: "Missing required hub variables for {{ inventory_hostname }}."
       when: device_role == "hub"
       delegate_to: localhost
@@ -91,6 +179,9 @@
           - lo_hc is defined
           - lo_hc.interface is defined
           - lo_hc.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
         fail_msg: "Missing required branch variables for {{ inventory_hostname }}."
       when: device_role == "branch"
       delegate_to: localhost

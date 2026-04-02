@@ -4,7 +4,7 @@ This repository renders FortiGate CLI configuration snippets for a multi-site AD
 
 The design pattern is:
 - ADVPN overlays over IPsec
-- eBGP peering over tunnel interfaces
+- eBGP peering over tunnel interfaces **or** loopbacks (selectable)
 - SD-WAN policy steering
 - Hub/branch role-specific templates
 
@@ -44,19 +44,23 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - Device list, group membership, and Ansible login settings.
 - `group_vars/all.yml`
   - Global ADVPN/IPsec/SD-WAN/BGP/route-map defaults used by all hosts.
+  - Recommended structure is now nested under `advpn.*` (for example: `advpn.phase1`, `advpn.phase2`, `advpn.tunnels`, `advpn.sdwan`, `advpn.branch`, `advpn.interhub_ipsec`) so related overlay settings stay grouped.
 - `group_vars/hub_devices.yml`
   - Hub role marker and hub-only defaults.
 - `group_vars/branch_devices.yml`
   - Branch role marker and branch-only defaults.
 - `host_vars/*.yml`
-  - Per-site addressing and overrides (LAN, WAN mode/IP, loopbacks, hostnames, etc.).
+  - Per-site addressing and overrides (LAN, WAN mode/IP, hostnames, etc.).
+  - ADVPN 2.0 style loopback separation:
+    - `lo_hc` => SD-WAN/health-check loopback (`lo.hc`)
+    - `lo_bgp` => BGP peering/update-source loopback (`lo.bgp`)
 
 ### Template modules (`templates/*.j2`)
 
 - `musthaves.j2`
   - System baseline (hostname, admin timeout/password, RFC1918 objects, static blackhole routes).
 - `interfaces.j2`
-  - LAN/WAN interface config, branch `lo.hc` loopback, and DHCP server block (when LAN DHCP range is set).
+  - LAN/WAN interface config, loopbacks (`lo.hc` and `lo.bgp`), and DHCP server block (when LAN DHCP range is set).
 - `hub_phase1.j2` / `branch_phase1.j2`
   - IPsec phase1-interface for ADVPN overlays.
 - `hub_phase2.j2` / `branch_phase2.j2`
@@ -104,6 +108,23 @@ Then Ansible assembles all numbered files into:
 
 ---
 
+## Overlay variable layout recommendation
+
+For maintainability, keep overlay values grouped by function instead of top-level flat keys:
+
+- `advpn.phase1` => IKE/phase1 profile defaults.
+- `advpn.phase2` => phase2 selectors and timers.
+- `advpn.tunnels` => overlay matrix (`name`, hub, WAN mapping, `network_id`).
+- `advpn.sdwan.branch` and `advpn.sdwan.hub` => role-specific SD-WAN behavior.
+- `advpn.branch` => branch-only route-map and BGP route-map naming.
+- `advpn.interhub_ipsec` => hub interconnect profile.
+- `advpn.bgp.session_mode` => BGP peering method: `per_overlay` (default) or `loopback`.
+
+`playbook.yml` normalizes these nested keys back into the template variables used throughout the repo. This also keeps backward compatibility with older flat variable names while encouraging the cleaner nested model.
+To avoid double maintenance, branch `preferable` route-maps are auto-derived from `advpn.tunnels` (community format: `<bgp.asn>:<network_id>`) and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
+
+---
+
 ## 4) Current default topology/profile in this repo
 
 - Hubs
@@ -115,7 +136,7 @@ Then Ansible assembles all numbered files into:
   - `denver` => `fgt_hostname: Branch03`
 - WAN interfaces default to DHCP mode when no static WAN IP is defined in host vars.
 - LAN and DHCP pools are defined per site in host vars.
-- Branch `lo.hc` loopback is defined per branch and can be advertised in branch BGP.
+- `lo.hc` is reserved for health-check use; `lo.bgp` is used for BGP peering/advertisement.
 
 ---
 
