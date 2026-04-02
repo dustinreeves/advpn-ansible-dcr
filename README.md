@@ -44,6 +44,7 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - Device list, group membership, and Ansible login settings.
 - `group_vars/all.yml`
   - Global ADVPN/IPsec/SD-WAN/BGP/route-map defaults used by all hosts.
+  - Recommended structure is now nested under `advpn.*` (for example: `advpn.phase1`, `advpn.phase2`, `advpn.tunnels`, `advpn.sdwan`, `advpn.branch`, `advpn.interhub_ipsec`) so related overlay settings stay grouped.
 - `group_vars/hub_devices.yml`
   - Hub role marker and hub-only defaults.
 - `group_vars/branch_devices.yml`
@@ -101,6 +102,22 @@ The renderer writes numbered sections under `rendered/<normalized_hostname>/`:
 Then Ansible assembles all numbered files into:
 
 - `rendered/<normalized_hostname>-full-<timestamp>.conf`
+
+---
+
+## Overlay variable layout recommendation
+
+For maintainability, keep overlay values grouped by function instead of top-level flat keys:
+
+- `advpn.phase1` => IKE/phase1 profile defaults.
+- `advpn.phase2` => phase2 selectors and timers.
+- `advpn.tunnels` => overlay matrix (`name`, hub, WAN mapping, `network_id`).
+- `advpn.sdwan.branch` and `advpn.sdwan.hub` => role-specific SD-WAN behavior.
+- `advpn.branch` => branch-only route-map and BGP route-map naming.
+- `advpn.interhub_ipsec` => hub interconnect profile.
+
+`playbook.yml` normalizes these nested keys back into the template variables used throughout the repo. This also keeps backward compatibility with older flat variable names while encouraging the cleaner nested model.
+To avoid double maintenance, branch `preferable` route-maps are auto-derived from `advpn.tunnels` (community format: `<bgp.asn>:<network_id>`) and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
 
 ---
 
