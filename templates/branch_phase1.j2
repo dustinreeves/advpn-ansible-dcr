@@ -5,7 +5,12 @@ config vpn ipsec phase1-interface
         set ike-version {{ ike_version }}
         set peertype any
         set net-device {{ net_device }}
+{% if bgp.session_mode == "loopback" %}
+        set exchange-interface-ip enable
+        set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% else %}
         set mode-cfg {{ mode_cfg }}
+{% endif %}
         set proposal {{ proposal }}
         set add-route {{ add_route }}
         set localid "{{ site_slug }}-{{ t.network_id }}"

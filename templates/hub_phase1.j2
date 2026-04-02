@@ -7,7 +7,12 @@ config vpn ipsec phase1-interface
         set ike-version {{ ike_version }}
         set peertype any
         set net-device {{ net_device }}
+{% if bgp.session_mode == "loopback" %}
+        set exchange-interface-ip enable
+        set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% else %}
         set mode-cfg {{ mode_cfg }}
+{% endif %}
         set proposal {{ proposal }}
         set add-route {{ add_route }}
         set localid "{{ fgt_hostname }}"
@@ -18,9 +23,11 @@ config vpn ipsec phase1-interface
         set auto-discovery-forwarder enable
         set network-overlay {{ network_overlay }}
         set network-id {{ t.network_id }}
+{% if bgp.session_mode != "loopback" %}
         set ipv4-start-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.20
         set ipv4-end-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.250
         set ipv4-netmask 255.255.255.0
+{% endif %}
         set psksecret {{ psksecret }}
         set dpd-retryinterval 60
     next
