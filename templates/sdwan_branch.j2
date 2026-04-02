@@ -31,6 +31,10 @@ config system sdwan
 {% for hc in sdwan_health_checks %}
         edit "{{ hc.name }}"
             set server "{{ hc.server }}"
+            set source {{ hc.source | default(lo_bgp.ip.split()[0]) }}
+{% if hc.detect_mode is defined %}
+            set detect-mode {{ hc.detect_mode }}
+{% endif %}
             set members {{ hc.members | join(' ') }}
             config sla
                 edit 1
@@ -45,11 +49,17 @@ config system sdwan
 {% for svc in sdwan_services %}
         edit {{ loop.index }}
             set name "{{ svc.name }}"
-            set mode priority
-            set dst "all"
-            set src "all"
+            set mode {{ svc.mode | default('priority') }}
+            set dst "{{ svc.dst | default('all') }}"
+            set src "{{ svc.src | default('all') }}"
             set health-check "{{ svc.health_check }}"
+{% if svc.tie_break is defined %}
+            set tie-break {{ svc.tie_break }}
+{% endif %}
             set link-cost-factor packet-loss
+{% if svc.minimum_sla_meet_members is defined %}
+            set minimum-sla-meet-members {{ svc.minimum_sla_meet_members }}
+{% endif %}
             set priority-members {{ svc.priority_members | join(' ') }}
         next
 {% endfor %}
@@ -96,6 +106,16 @@ config firewall policy
         set name "vpnsdwan-to-lo-bgp"
         set srcintf "vpnsdwan"
         set dstintf "{{ lo_bgp.interface }}"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
+        set name "lo-bgp-to-vpnsdwan"
+        set srcintf "{{ lo_bgp.interface }}"
+        set dstintf "vpnsdwan"
         set action accept
         set srcaddr "all"
         set dstaddr "all"

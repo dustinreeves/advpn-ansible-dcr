@@ -33,6 +33,28 @@ config system sdwan
         next
     end
 
+{% if hub_sdwan_health_checks is defined and (hub_sdwan_health_checks | length > 0) %}
+    config health-check
+{% for hc in hub_sdwan_health_checks %}
+        edit "{{ hc.name }}"
+            set server "{{ hc.server }}"
+{% if hc.source is defined %}
+            set source {{ hc.source }}
+{% endif %}
+{% if hc.detect_mode is defined %}
+            set detect-mode {{ hc.detect_mode }}
+{% endif %}
+            set members {{ hc.members | join(' ') }}
+            config sla
+                edit 1
+                    set packetloss-threshold {{ hc.packetloss_threshold }}
+                next
+            end
+        next
+{% endfor %}
+    end
+{% endif %}
+
     config service
         edit 1
             set name "{{ hub_sdwan_inet_service.name }}"
@@ -42,12 +64,16 @@ config system sdwan
             set priority-members {{ hub_overlay_interfaces | map(attribute='member_id') | max + 1 }} {{ hub_overlay_interfaces | map(attribute='member_id') | max + 2 }}
             set priority-zone "inet"
         next
-{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+{% for svc in hub_sdwan_route_services | default([], true) %}
         edit {{ 50 + loop.index }}
-            set name "SDWAN_{{ t.network_id }}"
-            set route-tag {{ t.network_id }}
-            set src "rfc1918grp"
-            set priority-members {{ t.member_id }}
+            set name "{{ svc.name }}"
+            set route-tag {{ svc.route_tag }}
+            set src "{{ svc.src | default('rfc1918grp') }}"
+            set mode {{ svc.mode | default('manual') }}
+{% if svc.tie_break is defined %}
+            set tie-break {{ svc.tie_break }}
+{% endif %}
+            set priority-members {{ svc.priority_members | join(' ') }}
         next
 {% endfor %}
     end

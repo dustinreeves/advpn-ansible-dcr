@@ -71,10 +71,12 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
 - `sdwan_hub.j2` / `sdwan_branch.j2`
   - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
   - Includes loopback-mode control-plane policies for both `lo.hc` and `lo.bgp` (`vpnsdwan -> loopback`) so BGP-over-loopback sessions are permitted.
+  - Supports per-service SD-WAN mode tuning (`manual`, `sla`, etc.), tie-break behavior, and minimum SLA member controls via vars.
 - `bgp_hub.j2` / `bgp_branch.j2`
   - BGP policy and peering model:
     - hubs: neighbor-groups + neighbor-ranges
     - branches: per-neighbor interface binding, network advertisement
+  - Router-ID is set from `lo_bgp` automatically.
 - `community_lists.j2`
   - Hub community lists used by routing policy.
 - `route_maps_hub.j2` / `route_maps_branch.j2`
@@ -187,3 +189,22 @@ Important conventions:
 - `host_vars/<name>.yml` filename must match inventory hostname exactly.
 - Role-specific fields must exist for the matching device role.
 - Keep addressing inputs in host vars authoritative; templates are designed to render directly from those values.
+
+---
+
+## 8) Multi-hub / multi-overlay planning checklist alignment
+
+This repo now directly supports the following recommended ADVPN controls:
+
+- BGP loopback peering with `lo.bgp` update-source and router-id on both hubs and branches.
+- Branch SD-WAN health-check source defaults to branch `lo.bgp` (override per check if needed).
+- Optional SD-WAN health-check `detect_mode` (for example `remote`) on branch and hub.
+- Hub SD-WAN route services configurable from vars (including manual mode + FIB tie-break).
+- Branch SD-WAN services configurable for SLA-driven pathing (`mode`, `tie_break`, `minimum_sla_meet_members`).
+- Explicit branch policy for `lo.bgp -> vpnsdwan` in addition to `vpnsdwan -> lo.bgp`.
+
+Items still operator-defined by design (must be planned in your inventory/vars):
+
+- Site ID numbering conventions (for example 3-254) and how they map into your own naming/address plan.
+- Exact BGP peering subnet plan and per-site /32 allocations.
+- Overlay count/topology design decisions between hubs and spokes.

@@ -99,6 +99,7 @@
         sdwan_services: "{{ advpn.sdwan.branch.services | default(sdwan_services, true) }}"
         sdwan_inet_service: "{{ advpn.sdwan.branch.inet_service | default(sdwan_inet_service, true) }}"
         hub_sdwan_inet_service: "{{ advpn.sdwan.hub.inet_service | default(hub_sdwan_inet_service, true) }}"
+        hub_sdwan_health_checks: "{{ advpn.sdwan.hub.health_checks | default([], true) }}"
         hub_sdwan_route_services: "{{ advpn.sdwan.hub.route_services | default(hub_sdwan_route_services, true) }}"
         branch_route_maps: >-
           {{
