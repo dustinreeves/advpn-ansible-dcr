@@ -1,0 +1,12 @@
+site_name: new york, ny
+site_slug: new-york
+
+lan:
+  interface: port1
+  ip: 10.101.10.1 255.255.255.0
+
+wan:
+  wan1:
+    interface: port10
+  wan2:
+    interface: port9

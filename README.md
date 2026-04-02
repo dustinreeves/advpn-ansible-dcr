@@ -48,10 +48,10 @@ The following errors were corrected:
 
 3. **Host var filename mismatch with inventory hostnames**
    - renamed host var files to match case-sensitive inventory names:
-     - `Hub01.yml`, `Hub02.yml`, `Kingsgate.yml`, `Frisco.yml`
+     - `ftw.yml`, `boulder.yml`, `new_york.yml`, `dallas.yml`
 
-4. **Missing host vars for `Abilene`**
-   - added `host_vars/Abilene.yml`
+4. **Missing host vars for `seattle`**
+   - added `host_vars/seattle.yml`
 
 5. **Incorrect YAML nesting in `group_vars/all.yml`**
    - moved these to correct top-level keys:
@@ -89,9 +89,9 @@ The following errors were corrected:
 ### Variable files
 
 - Global: `group_vars/all.yml`
-- Hubs role: `group_vars/hub_devices.yml`
-- Branch role: `group_vars/branch_devices.yml`
-- Per-host: `host_vars/<InventoryHost>.yml`
+- Hubs role: `group_vars/hub_devices.yml` (hosts: `ftw`, `boulder`)
+- Branch role: `group_vars/branch_devices.yml` (hosts: `new_york`, `dallas`, `seattle`)
+- Per-host: `host_vars/<inventory_hostname>.yml`
 
 ---
 
