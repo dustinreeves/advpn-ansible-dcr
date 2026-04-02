@@ -1,146 +1,166 @@
 # FortiGate ADVPN (BGP on Interface) - Ansible Renderer
 
-This repository renders FortiGate ADVPN configuration snippets using Ansible + Jinja2.
+This repository renders FortiGate CLI configuration snippets for a multi-site ADVPN topology using **Ansible + Jinja2**.
 
-The design here is **ADVPN with eBGP neighbors configured directly on tunnel interfaces** ("BGP on interface").
-
----
-
-## What this project generates
-
-Per device in `inventory.yml`, the playbook renders CLI snippets into `rendered/`:
-
-- baseline / must-have settings
-- interface IP and allowaccess settings
-- ADVPN IPsec phase1 + phase2
-- SD-WAN members/services
-- BGP configuration (neighbor-group on hubs, per-neighbor interface binding on branches)
-- hub community lists and route-maps
-- branch route-maps
-- hub inter-hub IPsec
-
-Output files are named like:
-
-- `rendered/<HOST>-baseline.conf`
-- `rendered/<HOST>-phase1.conf`
-- `rendered/<HOST>-phase2.conf`
-- `rendered/<HOST>-sdwan.conf`
-- `rendered/<HOST>-bgp.conf`
+The design pattern is:
+- ADVPN overlays over IPsec
+- eBGP peering over tunnel interfaces
+- SD-WAN policy steering
+- Hub/branch role-specific templates
 
 ---
 
-## Fixed issues (from previous audit)
+## 1) How the whole workflow works
 
-The following errors were corrected:
+1. Inventory defines devices and groups (`hub_devices`, `branch_devices`).
+2. Ansible loads variable layers in this order:
+   - `group_vars/all.yml` (global defaults)
+   - `group_vars/<group>.yml` (role defaults)
+   - `host_vars/<host>.yml` (site-specific overrides)
+3. `playbook.yml` validates required inputs in `pre_tasks`.
+4. `playbook.yml` renders templates in deterministic numeric order (`01-*`, `02-*`, ...).
+5. Ansible assembles rendered sections into a single full config per host in `rendered/`.
 
-1. **Broken template references in playbooks**
-   - corrected baseline template path to `templates/musthaves.j2`
-   - added missing hub templates:
-     - `templates/hub_phase1.j2`
-     - `templates/hub_tunnel_allowaccess.j2`
-     - `templates/hub_phase2.j2`
-
-2. **Group var filename mismatch**
-   - renamed:
-     - `group_vars/hubs.yml` -> `group_vars/hub_devices.yml`
-     - `group_vars/branches.yml` -> `group_vars/branch_devices.yml`
-   - now aligns with inventory groups `hub_devices` and `branch_devices`
-
-3. **Host var filename mismatch with inventory hostnames**
-   - renamed host var files to match case-sensitive inventory names:
-     - `dallas.yml`, `chicago.yml`, `phoenix.yml`, `atlanta.yml`
-
-4. **Missing host vars for `denver`**
-   - added `host_vars/denver.yml`
-
-5. **Incorrect YAML nesting in `group_vars/all.yml`**
-   - moved these to correct top-level keys:
-     - `hub_sdwan_inet_service`
-     - `interhub_ipsec`
-     - `branch_route_maps`
-     - `branch_bgp_route_maps`
-
-6. **Undefined vars in branch phase2 template**
-   - updated `templates/branch_phase2.j2` to use `phase2.*` structure
-
-7. **Undefined BGP vars in branch BGP template**
-   - added required keys under `bgp` in `group_vars/all.yml`
-
-8. **Route-map templates not rendered**
-   - added playbook tasks for:
-     - `templates/route_maps_hub.j2`
-     - `templates/route_maps_branch.j2`
-
-9. **`rendered/` directory assumed to exist**
-   - added a `pre_tasks` step to create `rendered/` on localhost
-
-10. **Duplicate playbook drift risk**
-   - `playbook-render.yml` now imports `playbook.yml` to keep a single source of truth
+The output is rendered locally (via `delegate_to: localhost`), so this repo can be used as an offline config generator.
 
 ---
 
-## Inventory and variable model
+## 2) Repository layout and what each module does
 
-### Inventory groups
+### Core playbooks
 
-- `hub_devices`
-- `branch_devices`
+- `playbook.yml`
+  - Main orchestration entrypoint.
+  - Creates output directories.
+  - Validates required vars (common + hub-specific + branch-specific).
+  - Renders each template section.
+  - Assembles final merged config in section order.
+- `playbook-render.yml`
+  - Thin wrapper that imports `playbook.yml`.
 
-### Variable files
+### Inventory and variable model
 
-- Global: `group_vars/all.yml`
-- Hubs role: `group_vars/hub_devices.yml` (hosts: `dallas`, `chicago`)
-- Branch role: `group_vars/branch_devices.yml` (hosts: `phoenix`, `atlanta`, `denver`)
-- Per-host: `host_vars/<inventory_hostname>.yml`
+- `inventory.yml`
+  - Device list, group membership, and Ansible login settings.
+- `group_vars/all.yml`
+  - Global ADVPN/IPsec/SD-WAN/BGP/route-map defaults used by all hosts.
+- `group_vars/hub_devices.yml`
+  - Hub role marker and hub-only defaults.
+- `group_vars/branch_devices.yml`
+  - Branch role marker and branch-only defaults.
+- `host_vars/*.yml`
+  - Per-site addressing and overrides (LAN, WAN mode/IP, loopbacks, hostnames, etc.).
+
+### Template modules (`templates/*.j2`)
+
+- `musthaves.j2`
+  - System baseline (hostname, admin timeout/password, RFC1918 objects, static blackhole routes).
+- `interfaces.j2`
+  - LAN/WAN interface config, branch `lo.hc` loopback, and DHCP server block (when LAN DHCP range is set).
+- `hub_phase1.j2` / `branch_phase1.j2`
+  - IPsec phase1-interface for ADVPN overlays.
+- `hub_phase2.j2` / `branch_phase2.j2`
+  - IPsec phase2 selectors for each overlay.
+- `hub_tunnel_allowaccess.j2` / `branch_tunnel_allowaccess.j2`
+  - Tunnel interface allowaccess behavior.
+- `sdwan_hub.j2` / `sdwan_branch.j2`
+  - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
+- `bgp_hub.j2` / `bgp_branch.j2`
+  - BGP policy and peering model:
+    - hubs: neighbor-groups + neighbor-ranges
+    - branches: per-neighbor interface binding, network advertisement
+- `community_lists.j2`
+  - Hub community lists used by routing policy.
+- `route_maps_hub.j2` / `route_maps_branch.j2`
+  - Route-map policy for route tagging, preference, and fail handling.
+- `hub_interhub_ipsec.j2`
+  - Direct hub-to-hub IPsec link and policy.
+
+### Utility scripts
+
+- `scripts/host_vars_wizard.py`
+  - Interactive/non-interactive helper to create new `host_vars/<site>.yml` from an existing template.
 
 ---
 
-## Run
+## 3) Render sequence (per host)
+
+The renderer writes numbered sections under `rendered/<normalized_hostname>/`:
+
+1. `01-baseline.conf`
+2. `02-interfaces.conf`
+3. `03-phase1.conf`
+4. `04-tunnel-allowaccess.conf`
+5. `05-phase2.conf`
+6. `06-community-lists.conf` (hub) or `06-route-maps.conf` (branch)
+7. `07-route-maps.conf` (hub) or `07-sdwan.conf` (branch)
+8. `08-sdwan.conf` (hub) or `08-bgp.conf` (branch)
+9. `09-bgp.conf` (hub)
+10. `10-interhub-ipsec.conf` (hub)
+
+Then Ansible assembles all numbered files into:
+
+- `rendered/<normalized_hostname>-full-<timestamp>.conf`
+
+---
+
+## 4) Current default topology/profile in this repo
+
+- Hubs
+  - `dallas` => `fgt_hostname: Hub01`
+  - `chicago` => `fgt_hostname: Hub02`
+- Branches
+  - `phoenix` => `fgt_hostname: Branch01`
+  - `atlanta` => `fgt_hostname: Branch02`
+  - `denver` => `fgt_hostname: Branch03`
+- WAN interfaces default to DHCP mode when no static WAN IP is defined in host vars.
+- LAN and DHCP pools are defined per site in host vars.
+- Branch `lo.hc` loopback is defined per branch and can be advertised in branch BGP.
+
+---
+
+## 5) How to run
 
 ```bash
 ansible-playbook -i inventory.yml playbook.yml
 ```
 
-## Host vars interactive wizard
-
-If you want a command that asks for all site variables (WAN IPs, site name, etc.) and pre-fills defaults from an existing host template, use:
-
-```bash
-python3 scripts/host_vars_wizard.py
-```
-
-You can also run it non-interactively for template selection/output naming:
-
-```bash
-python3 scripts/host_vars_wizard.py --template phoenix --output atlanta
-```
-
-How it works:
-- Reads an existing `host_vars/<template>.yml` as the source of defaults.
-- Prompts for every variable path and shows the current value in brackets.
-- Press Enter to keep any default.
-- Writes the new host vars file to `host_vars/<output>.yml`.
-
-Optional dry checks:
+Optional checks:
 
 ```bash
 ansible-inventory -i inventory.yml --graph
 ansible-playbook -i inventory.yml playbook.yml --syntax-check
 ```
 
-The playbook now includes pre-task assertions that validate required variables
-for every host before rendering templates. This catches missing keys early
-(for example, per-role hub fields like `interhub.*` and
-`hub_overlay_interfaces`).
+---
 
-Keep `host_vars/` aligned to inventory hostnames only. Files in `host_vars/`
-must exactly match `inventory.yml` host keys (`dallas`, `chicago`, `phoenix`,
-`atlanta`, `denver`) to avoid stale or misleading variable definitions.
+## 6) Creating/updating site host vars
+
+Interactive mode:
+
+```bash
+python3 scripts/host_vars_wizard.py
+```
+
+Non-interactive template/output selection:
+
+```bash
+python3 scripts/host_vars_wizard.py --template phoenix --output newsite
+```
+
+Behavior:
+- Reads `host_vars/<template>.yml` as defaults.
+- Prompts for every key path.
+- Enter keeps default values.
+- Writes `host_vars/<output>.yml`.
 
 ---
 
-## Notes for BGP on interface design
+## 7) Guardrails and validation
 
-- Branch BGP neighbors are rendered per ADVPN tunnel and bound with `set interface "<tunnel_name>"`.
-- Hub BGP uses neighbor-groups + neighbor-ranges tied to overlay prefixes.
-- Route-maps and community-lists are rendered to support route-tag/community policy per tunnel/network-id.
+`playbook.yml` asserts required keys before rendering so invalid host definitions fail early.
+
+Important conventions:
+- `host_vars/<name>.yml` filename must match inventory hostname exactly.
+- Role-specific fields must exist for the matching device role.
+- Keep addressing inputs in host vars authoritative; templates are designed to render directly from those values.
