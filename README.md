@@ -1,11 +1,11 @@
-# FortiGate ADVPN (BGP on Interface) - Ansible Renderer
+# FortiGate ADVPN (BGP over Loopback Preferred) - Ansible Renderer
 Be advised this is for labbing only, this is mostly chatgpt ai slop, but its pretty good at writing ansible crap. but YMMV.
 
 This repository renders FortiGate CLI configuration snippets for a multi-site ADVPN topology using **Ansible + Jinja2**.
 
 The design pattern is:
 - ADVPN overlays over IPsec
-- eBGP peering over tunnel interfaces **or** loopbacks (selectable)
+- eBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
 - SD-WAN policy steering
 - Hub/branch role-specific templates
 
@@ -74,9 +74,11 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - Supports per-service SD-WAN mode tuning (`manual`, `sla`, etc.), tie-break behavior, and minimum SLA member controls via vars.
 - `bgp_hub.j2` / `bgp_branch.j2`
   - BGP policy and peering model:
+    - `session_mode: loopback` (recommended/current default): loopback-based neighbor definitions with update-source from `lo.bgp`.
+    - `session_mode: per_overlay` (legacy compatibility): per-overlay interface-neighbor style peering.
     - hubs: neighbor-groups + neighbor-ranges
-    - branches: per-neighbor interface binding, network advertisement
-  - Router-ID is set from `lo_bgp` automatically.
+    - branches: route-map driven neighbor handling and network advertisement
+  - Router-ID is set from `lo_bgp` automatically in loopback mode.
 - `community_lists.j2`
   - Hub community lists used by routing policy.
 - `route_maps_hub.j2` / `route_maps_branch.j2`
@@ -122,7 +124,7 @@ For maintainability, keep overlay values grouped by function instead of top-leve
 - `advpn.sdwan.branch` and `advpn.sdwan.hub` => role-specific SD-WAN behavior.
 - `advpn.branch` => branch-only route-map and BGP route-map naming.
 - `advpn.interhub_ipsec` => hub interconnect profile.
-- `advpn.bgp.session_mode` => BGP peering method: `per_overlay` (default) or `loopback`.
+- `advpn.bgp.session_mode` => BGP peering method: `loopback` (current default/recommended) or `per_overlay` (legacy compatibility mode).
 
 `playbook.yml` normalizes these nested keys back into the template variables used throughout the repo. This also keeps backward compatibility with older flat variable names while encouraging the cleaner nested model.
 To avoid double maintenance, branch `preferable` route-maps are auto-derived from `advpn.tunnels` (community format: `<bgp.asn>:<network_id>`) and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
@@ -140,7 +142,8 @@ To avoid double maintenance, branch `preferable` route-maps are auto-derived fro
   - `denver` => `fgt_hostname: Branch03`
 - WAN interfaces default to DHCP mode when no static WAN IP is defined in host vars.
 - LAN and DHCP pools are defined per site in host vars.
-- `lo.hc` is reserved for health-check use; `lo.bgp` is used for BGP peering/advertisement.
+- `lo.hc` is reserved for health-check use.
+- `lo.bgp` is the preferred control-plane/BGP loopback and is used for BGP peering, update-source, and router-id.
 
 ---
 
@@ -194,14 +197,24 @@ Important conventions:
 
 ## 8) Multi-hub / multi-overlay planning checklist alignment
 
-This repo now directly supports the following recommended ADVPN controls:
+This repo now directly supports the following recommended ADVPN controls (loopback-first):
 
 - BGP loopback peering with `lo.bgp` update-source and router-id on both hubs and branches.
+- Default BGP session mode set to loopback in `group_vars/all.yml` (`advpn.bgp.session_mode: loopback`).
 - Branch SD-WAN health-check source defaults to branch `lo.bgp` (override per check if needed).
 - Optional SD-WAN health-check `detect_mode` (for example `remote`) on branch and hub.
 - Hub SD-WAN route services configurable from vars (including manual mode + FIB tie-break).
 - Branch SD-WAN services configurable for SLA-driven pathing (`mode`, `tie_break`, `minimum_sla_meet_members`).
 - Explicit branch policy for `lo.bgp -> vpnsdwan` in addition to `vpnsdwan -> lo.bgp`.
+
+### Recommended operating mode
+
+For new deployments, use BGP-over-loopback as the standard pattern:
+
+- Keep `advpn.bgp.session_mode: loopback` (default).
+- Assign unique `/32` loopback addresses per site for `lo.bgp`.
+- Keep SD-WAN and policy controls allowing both directions between overlay zone(s) and loopbacks.
+- Treat `per_overlay` mode as migration/compatibility fallback only.
 
 Items still operator-defined by design (must be planned in your inventory/vars):
 
