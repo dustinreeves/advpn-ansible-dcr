@@ -1,0 +1,62 @@
+name: Build ADVPN Ansible Artifacts
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible jinja2 pyyaml
+
+      - name: Install Galaxy requirements
+        run: |
+          if [ -f requirements.yml ]; then
+            ansible-galaxy install -r requirements.yml
+          fi
+
+      - name: Syntax check playbook
+        run: |
+          ansible-playbook -i inventory/lab.yml playbooks/site.yml --syntax-check
+
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Render configs / generate artifacts
+        run: |
+          ansible-playbook -i inventory/lab.yml playbooks/site.yml \
+            --check \
+            -e artifact_output_dir=output
+
+      - name: Show generated files
+        run: |
+          echo "Generated files:"
+          find output -type f | sort
+
+      - name: Upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: advpn-generated-configs
+          path: output/
+          if-no-files-found: error
+          retention-days: 14
