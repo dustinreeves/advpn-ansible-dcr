@@ -30,6 +30,35 @@
         fail_msg: "Missing required common variables for {{ inventory_hostname }}."
       delegate_to: localhost
 
+    - name: Build normalized hostname and render timestamp
+      ansible.builtin.set_fact:
+        normalized_hostname: >-
+          {{
+            (
+              site_slug
+              | default(site_name)
+              | lower
+              | regex_replace('[^a-z0-9-]+', '-')
+              | regex_replace('(^-+|-+$)', '')
+            )
+          }}
+        render_timestamp: "{{ lookup('pipe', 'date -u +%Y-%m-%d-%H%M%SZ') }}"
+      delegate_to: localhost
+
+    - name: Validate normalized hostname
+      ansible.builtin.assert:
+        that:
+          - normalized_hostname | length > 0
+        fail_msg: "Hostname slug resolves to an empty value for {{ inventory_hostname }}."
+      delegate_to: localhost
+
+    - name: Ensure per-host rendered output directory exists
+      ansible.builtin.file:
+        path: rendered/{{ normalized_hostname }}
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+
     - name: Validate hub required variables
       ansible.builtin.assert:
         that:
@@ -54,109 +83,116 @@
     - name: Render baseline config
       ansible.builtin.template:
         src: templates/musthaves.j2
-        dest: rendered/{{ inventory_hostname }}-baseline.conf
+        dest: rendered/{{ normalized_hostname }}/01-baseline.conf
       delegate_to: localhost
 
     - name: Render interfaces config
       ansible.builtin.template:
         src: templates/interfaces.j2
-        dest: rendered/{{ inventory_hostname }}-interfaces.conf
+        dest: rendered/{{ normalized_hostname }}/02-interfaces.conf
       delegate_to: localhost
 
     - name: Render hub phase1 config
       ansible.builtin.template:
         src: templates/hub_phase1.j2
-        dest: rendered/{{ inventory_hostname }}-phase1.conf
+        dest: rendered/{{ normalized_hostname }}/03-phase1.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub tunnel allowaccess config
       ansible.builtin.template:
         src: templates/hub_tunnel_allowaccess.j2
-        dest: rendered/{{ inventory_hostname }}-tunnel-allowaccess.conf
+        dest: rendered/{{ normalized_hostname }}/04-tunnel-allowaccess.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub phase2 config
       ansible.builtin.template:
         src: templates/hub_phase2.j2
-        dest: rendered/{{ inventory_hostname }}-phase2.conf
+        dest: rendered/{{ normalized_hostname }}/05-phase2.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub community lists
       ansible.builtin.template:
         src: templates/community_lists.j2
-        dest: rendered/{{ inventory_hostname }}-community-lists.conf
+        dest: rendered/{{ normalized_hostname }}/06-community-lists.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub route-maps
       ansible.builtin.template:
         src: templates/route_maps_hub.j2
-        dest: rendered/{{ inventory_hostname }}-route-maps.conf
+        dest: rendered/{{ normalized_hostname }}/07-route-maps.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub SD-WAN config
       ansible.builtin.template:
         src: templates/sdwan_hub.j2
-        dest: rendered/{{ inventory_hostname }}-sdwan.conf
+        dest: rendered/{{ normalized_hostname }}/08-sdwan.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render hub BGP config
       ansible.builtin.template:
         src: templates/bgp_hub.j2
-        dest: rendered/{{ inventory_hostname }}-bgp.conf
+        dest: rendered/{{ normalized_hostname }}/09-bgp.conf
       when: device_role == "hub"
       delegate_to: localhost
 
     - name: Render branch phase1 config
       ansible.builtin.template:
         src: templates/branch_phase1.j2
-        dest: rendered/{{ inventory_hostname }}-phase1.conf
+        dest: rendered/{{ normalized_hostname }}/03-phase1.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render branch tunnel allowaccess config
       ansible.builtin.template:
         src: templates/branch_tunnel_allowaccess.j2
-        dest: rendered/{{ inventory_hostname }}-tunnel-allowaccess.conf
+        dest: rendered/{{ normalized_hostname }}/04-tunnel-allowaccess.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render branch phase2 config
       ansible.builtin.template:
         src: templates/branch_phase2.j2
-        dest: rendered/{{ inventory_hostname }}-phase2.conf
+        dest: rendered/{{ normalized_hostname }}/05-phase2.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render branch route-maps
       ansible.builtin.template:
         src: templates/route_maps_branch.j2
-        dest: rendered/{{ inventory_hostname }}-route-maps.conf
+        dest: rendered/{{ normalized_hostname }}/06-route-maps.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render branch SD-WAN config
       ansible.builtin.template:
         src: templates/sdwan_branch.j2
-        dest: rendered/{{ inventory_hostname }}-sdwan.conf
+        dest: rendered/{{ normalized_hostname }}/07-sdwan.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render branch BGP config
       ansible.builtin.template:
         src: templates/bgp_branch.j2
-        dest: rendered/{{ inventory_hostname }}-bgp.conf
+        dest: rendered/{{ normalized_hostname }}/08-bgp.conf
       when: device_role == "branch"
       delegate_to: localhost
 
     - name: Render hub inter-hub IPsec config
       ansible.builtin.template:
         src: templates/hub_interhub_ipsec.j2
-        dest: rendered/{{ inventory_hostname }}-interhub-ipsec.conf
+        dest: rendered/{{ normalized_hostname }}/10-interhub-ipsec.conf
       when: device_role == "hub"
+      delegate_to: localhost
+
+    - name: Render full merged config in section order
+      ansible.builtin.assemble:
+        src: rendered/{{ normalized_hostname }}
+        regexp: '^[0-9]{2}-.*\.conf$'
+        dest: rendered/{{ normalized_hostname }}-full-{{ render_timestamp }}.conf
       delegate_to: localhost
