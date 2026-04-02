@@ -63,6 +63,18 @@
         derived_preferable_route_maps: []
       delegate_to: localhost
 
+    - name: Select effective tunnel matrix for this host
+      ansible.builtin.set_fact:
+        effective_tunnel_matrix: >-
+          {{
+            (
+              branch_tunnels
+              if (device_role == "branch" and branch_tunnels is defined)
+              else (advpn.tunnels | default(tunnel_matrix, true))
+            )
+          }}
+      delegate_to: localhost
+
     - name: Build derived preferable branch route-maps from tunnels
       ansible.builtin.set_fact:
         derived_preferable_route_maps: >-
@@ -75,11 +87,12 @@
               }
             ]
           }}
-      loop: "{{ advpn.tunnels | default(tunnel_matrix, true) }}"
+      loop: "{{ effective_tunnel_matrix }}"
       delegate_to: localhost
 
     - name: Normalize ADVPN variable structure
       ansible.builtin.set_fact:
+        site_id: "{{ advpn.site_identifiers[inventory_hostname] | default(site_id, true) }}"
         ike_version: "{{ advpn.phase1.ike_version | default(ike_version, true) }}"
         proposal: "{{ advpn.phase1.proposal | default(proposal, true) }}"
         dhgrp: "{{ advpn.phase1.dhgrp | default(dhgrp, true) }}"
@@ -94,7 +107,7 @@
         network_overlay: "{{ advpn.phase1.network_overlay | default(network_overlay, true) }}"
         bgp: "{{ advpn.bgp | default(bgp, true) }}"
         phase2: "{{ advpn.phase2 | default(phase2, true) }}"
-        tunnel_matrix: "{{ advpn.tunnels | default(tunnel_matrix, true) }}"
+        tunnel_matrix: "{{ effective_tunnel_matrix }}"
         sdwan_health_checks: "{{ advpn.sdwan.branch.health_checks | default(sdwan_health_checks, true) }}"
         sdwan_services: "{{ advpn.sdwan.branch.services | default(sdwan_services, true) }}"
         sdwan_inet_service: "{{ advpn.sdwan.branch.inet_service | default(sdwan_inet_service, true) }}"
@@ -126,6 +139,18 @@
               )
           }}
         interhub_ipsec: "{{ advpn.interhub_ipsec | default(interhub_ipsec, true) }}"
+      delegate_to: localhost
+
+    - name: Validate site identifier
+      ansible.builtin.assert:
+        that:
+          - site_id is defined
+          - (site_id | int) >= 1
+          - (site_id | int) <= 254
+          - (device_role != "branch") or ((site_id | int) >= 3)
+          - (inventory_hostname != "dallas") or ((site_id | int) == 1)
+          - (inventory_hostname != "chicago") or ((site_id | int) == 2)
+        fail_msg: "Invalid site_id for {{ inventory_hostname }}. Expected 1-254, branches >=3, dallas=1, chicago=2."
       delegate_to: localhost
 
     - name: Derive branch BGP route-map names from fail route-map definitions

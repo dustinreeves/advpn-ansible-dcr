@@ -119,15 +119,17 @@ Then Ansible assembles all numbered files into:
 For maintainability, keep overlay values grouped by function instead of top-level flat keys:
 
 - `advpn.phase1` => IKE/phase1 profile defaults.
+- `advpn.site_identifiers` => site inventory map used to assign per-site IDs (valid range `1..254`; branches must use `3..254`, with hubs pinned as `dallas=1`, `chicago=2`).
 - `advpn.phase2` => phase2 selectors and timers.
 - `advpn.tunnels` => overlay matrix (`name`, hub, WAN mapping, `network_id`).
+- `branch_tunnels` (optional, per `host_vars/<branch>.yml`) => branch-specific tunnel matrix override when a branch needs a different set of `network_id` mappings.
 - `advpn.sdwan.branch` and `advpn.sdwan.hub` => role-specific SD-WAN behavior.
 - `advpn.branch` => branch-only route-map and BGP route-map naming.
 - `advpn.interhub_ipsec` => hub interconnect profile.
 - `advpn.bgp.session_mode` => BGP peering method: `loopback` (current default/recommended) or `per_overlay` (legacy compatibility mode).
 
 `playbook.yml` normalizes these nested keys back into the template variables used throughout the repo. This also keeps backward compatibility with older flat variable names while encouraging the cleaner nested model.
-To avoid double maintenance, branch `preferable` route-maps are auto-derived from `advpn.tunnels` (community format: `<bgp.asn>:<network_id>`) and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
+To avoid double maintenance, branch `preferable` route-maps are auto-derived from the effective tunnel matrix (global `advpn.tunnels` or per-branch `branch_tunnels`) using community format `<bgp.asn>:<network_id>`, and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
 
 ---
 
@@ -140,6 +142,12 @@ To avoid double maintenance, branch `preferable` route-maps are auto-derived fro
   - `phoenix` => `fgt_hostname: Branch01`
   - `atlanta` => `fgt_hostname: Branch02`
   - `denver` => `fgt_hostname: Branch03`
+- Site identifiers
+  - `dallas` => `1` (HUB1)
+  - `chicago` => `2` (HUB2)
+  - `phoenix` => `3`
+  - `atlanta` => `4`
+  - `denver` => `5`
 - WAN interfaces default to DHCP mode when no static WAN IP is defined in host vars.
 - LAN and DHCP pools are defined per site in host vars.
 - `lo.hc` is reserved for health-check use.

@@ -1,4 +1,11 @@
 advpn:
+  site_identifiers:
+    dallas: 1
+    chicago: 2
+    phoenix: 3
+    atlanta: 4
+    denver: 5
+
   phase1:
     ike_version: 2
     proposal: "des-md5 des-sha1"
