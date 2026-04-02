@@ -30,9 +30,16 @@
           - wan.wan2.interface is defined
           - device_role is defined
           - device_role in ["hub", "branch"]
-          - bgp is defined
-          - bgp.session_mode is defined
-          - bgp.session_mode in ["per_overlay", "loopback"]
+          - bgp is defined or (advpn is defined and advpn.bgp is defined)
+          - >-
+              (bgp is defined and bgp.session_mode is defined)
+              or
+              (advpn is defined and advpn.bgp is defined and advpn.bgp.session_mode is defined)
+          - >-
+              (
+                (bgp.session_mode if (bgp is defined and bgp.session_mode is defined) else advpn.bgp.session_mode)
+                in ["per_overlay", "loopback"]
+              )
         fail_msg: "Missing required common variables for {{ inventory_hostname }}."
       delegate_to: localhost
 
