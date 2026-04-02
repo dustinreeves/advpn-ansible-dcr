@@ -65,7 +65,7 @@ config firewall policy
         set service "ALL"
     next
     edit 0
-        set name "vpnsdwan"
+        set name "vpnsdwan-to-Data"
         set srcintf "vpnsdwan"
         set dstintf "Data"
         set action accept
@@ -75,6 +75,7 @@ config firewall policy
         set service "ALL"
     next
     edit 0
+        set name "Data-to-vpnsdwan"
         set srcintf "Data"
         set dstintf "vpnsdwan"
         set action accept
@@ -94,9 +95,9 @@ config firewall policy
         set service "ALL"
     next
     edit 0
-        set name "port1-LAN-allow-out"
+        set name "Data-to-inet"
         set srcintf "Data"
-        set dstintf "any"
+        set dstintf "inet"
         set srcaddr "all"
         set dstaddr "all"
         set action accept
