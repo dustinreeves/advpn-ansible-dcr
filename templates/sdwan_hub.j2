@@ -42,3 +42,46 @@ config system sdwan
 {% endfor %}
     end
 end
+
+config firewall policy
+    edit 0
+        set name "vpnsdwan"
+        set srcintf "vpnsdwan"
+        set dstintf "Data"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
+        set srcintf "Data"
+        set dstintf "vpnsdwan"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
+        set name "vpnsdwan-to-loopback"
+        set srcintf "vpnsdwan"
+        set dstintf "loopbacksdwan"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
+        set name "port1-LAN-allow-out"
+        set srcintf "Data"
+        set dstintf "any"
+        set srcaddr "all"
+        set dstaddr "all"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set nat enable
+    next
+end
