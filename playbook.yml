@@ -12,6 +12,44 @@
       delegate_to: localhost
       run_once: true
 
+    - name: Validate common required variables
+      ansible.builtin.assert:
+        that:
+          - site_name is defined
+          - site_slug is defined
+          - lan is defined
+          - lan.interface is defined
+          - lan.ip is defined
+          - wan is defined
+          - wan.wan1 is defined
+          - wan.wan1.interface is defined
+          - wan.wan2 is defined
+          - wan.wan2.interface is defined
+          - device_role is defined
+          - device_role in ["hub", "branch"]
+        fail_msg: "Missing required common variables for {{ inventory_hostname }}."
+      delegate_to: localhost
+
+    - name: Validate hub required variables
+      ansible.builtin.assert:
+        that:
+          - hub_overlay_interfaces is defined
+          - hub_overlay_interfaces | length > 0
+          - interhub is defined
+          - interhub.tunnel_name is defined
+          - interhub.phase2_name is defined
+          - interhub.policy_name is defined
+          - interhub.parent_interface is defined
+          - interhub.localid is defined
+          - interhub.remote_gw is defined
+          - interhub.tunnel_ip is defined
+          - interhub.remote_tunnel_ip is defined
+          - hub_community_lists is defined
+          - hub_community_lists[inventory_hostname] is defined
+        fail_msg: "Missing required hub variables for {{ inventory_hostname }}."
+      when: device_role == "hub"
+      delegate_to: localhost
+
   tasks:
     - name: Render baseline config
       ansible.builtin.template:

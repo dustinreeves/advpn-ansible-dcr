@@ -108,6 +108,15 @@ ansible-inventory -i inventory.yml --graph
 ansible-playbook -i inventory.yml playbook.yml --syntax-check
 ```
 
+The playbook now includes pre-task assertions that validate required variables
+for every host before rendering templates. This catches missing keys early
+(for example, per-role hub fields like `interhub.*` and
+`hub_overlay_interfaces`).
+
+Keep `host_vars/` aligned to inventory hostnames only. Files in `host_vars/`
+must exactly match `inventory.yml` host keys (`ftw`, `boulder`, `new_york`,
+`dallas`, `seattle`) to avoid stale or misleading variable definitions.
+
 ---
 
 ## Notes for BGP on interface design
@@ -115,4 +124,3 @@ ansible-playbook -i inventory.yml playbook.yml --syntax-check
 - Branch BGP neighbors are rendered per ADVPN tunnel and bound with `set interface "<tunnel_name>"`.
 - Hub BGP uses neighbor-groups + neighbor-ranges tied to overlay prefixes.
 - Route-maps and community-lists are rendered to support route-tag/community policy per tunnel/network-id.
-
