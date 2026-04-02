@@ -1,6 +1,6 @@
 site_name: atlanta, ga
 site_slug: atlanta
-fgt_hostname: Branch02
+fgt_hostname: atlanta-ga-branch2
 
 lan:
   interface: port1
