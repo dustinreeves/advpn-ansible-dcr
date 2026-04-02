@@ -44,15 +44,3 @@ config firewall addrgrp
     next
 end
 
-config system interface
-{% if lan is defined %}
-    edit "{{ lan.interface }}"
-        set allowaccess ping https ssh
-    next
-{% endif %}
-{% for wan_name, wan_data in wan.items() %}
-    edit "{{ wan_data.interface }}"
-        set allowaccess ping
-    next
-{% endfor %}
-end

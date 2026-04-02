@@ -1,14 +1,18 @@
 config system interface
 {% if lan is defined %}
     edit "{{ lan.interface }}"
+        set mode static
         set ip {{ lan.ip }}
+        set allowaccess ping http https ssh
     next
 {% endif %}
 {% for wan_name, wan_data in wan.items() %}
-{% if wan_data.ip is defined %}
     edit "{{ wan_data.interface }}"
+{% if wan_data.ip is defined %}
+        set mode static
         set ip {{ wan_data.ip }}
-    next
 {% endif %}
+        set allowaccess ping http https ssh
+    next
 {% endfor %}
 end
