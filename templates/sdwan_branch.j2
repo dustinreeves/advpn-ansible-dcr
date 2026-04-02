@@ -70,6 +70,30 @@ config system zone
     next
 end
 
+
+config firewall policy
+    edit 0
+        set name "vpnsdwan-to-vpnsdwan"
+        set srcintf "vpnsdwan"
+        set dstintf "vpnsdwan"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+    edit 0
+        set name "vpnsdwan-to-Data"
+        set srcintf "vpnsdwan"
+        set dstintf "Data"
+        set action accept
+        set srcaddr "all"
+        set dstaddr "all"
+        set schedule "always"
+        set service "ALL"
+    next
+end
+
 config router static
     edit 1
         set distance 1
