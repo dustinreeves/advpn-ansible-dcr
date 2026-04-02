@@ -9,6 +9,22 @@ config router bgp
     set additional-path-select {{ bgp.additional_path_select }}
 
     config neighbor-group
+{% if bgp.session_mode == "loopback" %}
+        edit "BRANCH-LOOPBACK"
+            set advertisement-interval {{ bgp.advertisement_interval }}
+            set link-down-failover {{ bgp.link_down_failover }}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set remote-as {{ bgp.remote_as }}
+            set keep-alive-timer {{ bgp.keep_alive_timer }}
+            set holdtime-timer {{ bgp.holdtime_timer }}
+            set connect-timer {{ bgp.connect_timer }}
+            set update-source "{{ lo_bgp.interface }}"
+            set additional-path {{ bgp.additional_path_mode }}
+            set adv-additional-path {{ bgp.adv_additional_path }}
+            set route-reflector-client {{ bgp.route_reflector_client }}
+            set route-map-in "RM-HUB-FAIL"
+        next
+{% else %}
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
         edit "VPN{{ t.network_id }}"
             set advertisement-interval {{ bgp.advertisement_interval }}
@@ -26,21 +42,37 @@ config router bgp
             set route-map-in "RM-HUB-{{ t.network_id }}"
         next
 {% endfor %}
+{% endif %}
     end
 
     config neighbor-range
+{% if bgp.session_mode == "loopback" %}
+{% for branch_name in groups['branch_devices'] | sort %}
+{% set branch_lo = hostvars[branch_name].lo_bgp.ip.split()[0] %}
+        edit {{ loop.index }}
+            set prefix {{ branch_lo }} 255.255.255.255
+            set neighbor-group "BRANCH-LOOPBACK"
+        next
+{% endfor %}
+{% else %}
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
         edit {{ loop.index }}
             set prefix {{ t.overlay_subnet }}
             set neighbor-group "VPN{{ t.network_id }}"
         next
 {% endfor %}
+{% endif %}
     end
 
     config network
         edit 1
             set prefix {{ lan.subnet }}
         next
+{% if lo_bgp is defined and lo_bgp.ip is defined %}
+        edit 2
+            set prefix {{ lo_bgp.ip }}
+        next
+{% endif %}
     end
 
     config network6

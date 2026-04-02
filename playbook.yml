@@ -20,6 +20,9 @@
           - lan is defined
           - lan.interface is defined
           - lan.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
           - wan is defined
           - wan.wan1 is defined
           - wan.wan1.interface is defined
@@ -27,6 +30,9 @@
           - wan.wan2.interface is defined
           - device_role is defined
           - device_role in ["hub", "branch"]
+          - bgp is defined
+          - bgp.session_mode is defined
+          - bgp.session_mode in ["per_overlay", "loopback"]
         fail_msg: "Missing required common variables for {{ inventory_hostname }}."
       delegate_to: localhost
 
@@ -157,6 +163,9 @@
           - lo_hc is defined
           - lo_hc.interface is defined
           - lo_hc.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
         fail_msg: "Missing required hub variables for {{ inventory_hostname }}."
       when: device_role == "hub"
       delegate_to: localhost
@@ -170,6 +179,9 @@
           - lo_hc is defined
           - lo_hc.interface is defined
           - lo_hc.ip is defined
+          - lo_bgp is defined
+          - lo_bgp.interface is defined
+          - lo_bgp.ip is defined
         fail_msg: "Missing required branch variables for {{ inventory_hostname }}."
       when: device_role == "branch"
       delegate_to: localhost
