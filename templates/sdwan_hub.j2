@@ -6,6 +6,16 @@ end
 
 config system sdwan
     set status enable
+
+    config zone
+        edit "virtual-wan-link"
+        next
+        edit "inet"
+        next
+        edit "vpnsdwan"
+        next
+    end
+
     config members
 {% for t in hub_overlay_interfaces %}
         edit {{ t.member_id }}
