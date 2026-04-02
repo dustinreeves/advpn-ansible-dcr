@@ -1,0 +1,22 @@
+{#
+  Retrofit allowaccess on physical FortiGate port* interfaces only.
+  Intentionally excludes tunnel/loopback/non-port interfaces.
+#}
+{% set ns = namespace(port_interfaces=[]) %}
+{% if lan is defined and lan.interface is defined and (lan.interface | lower).startswith('port') %}
+{% set ns.port_interfaces = ns.port_interfaces + [lan.interface] %}
+{% endif %}
+{% if wan is defined %}
+{% for _, wan_data in wan.items() %}
+{% if wan_data.interface is defined and (wan_data.interface | lower).startswith('port') %}
+{% set ns.port_interfaces = ns.port_interfaces + [wan_data.interface] %}
+{% endif %}
+{% endfor %}
+{% endif %}
+config system interface
+{% for iface in (ns.port_interfaces | unique | sort) %}
+    edit "{{ iface }}"
+        set allowaccess ping http https ssh snmp
+    next
+{% endfor %}
+end
