@@ -4,7 +4,6 @@ config vpn ipsec phase2-interface
         set phase1name "{{ t.name }}"
         set proposal {{ phase2.proposal }}
         set dhgrp {{ phase2.dhgrp }}
-        set auto-negotiate {{ phase2.auto_negotiate }}
         set keylifeseconds {{ phase2.keylifeseconds }}
     next
 {% endfor %}

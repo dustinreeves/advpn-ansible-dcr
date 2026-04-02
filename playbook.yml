@@ -75,6 +75,9 @@
           - interhub.remote_tunnel_ip is defined
           - hub_community_lists is defined
           - hub_community_lists[inventory_hostname] is defined
+          - lo_hc is defined
+          - lo_hc.interface is defined
+          - lo_hc.ip is defined
         fail_msg: "Missing required hub variables for {{ inventory_hostname }}."
       when: device_role == "hub"
       delegate_to: localhost
@@ -88,7 +91,6 @@
           - lo_hc is defined
           - lo_hc.interface is defined
           - lo_hc.ip is defined
-          - lo_hc.subnet is defined
         fail_msg: "Missing required branch variables for {{ inventory_hostname }}."
       when: device_role == "branch"
       delegate_to: localhost
