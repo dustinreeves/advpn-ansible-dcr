@@ -1,4 +1,5 @@
 # FortiGate ADVPN (BGP on Interface) - Ansible Renderer
+Be advised this is for labbing only, this is mostly chatgpt ai slop, but its pretty good at writing ansible crap. but YMMV.
 
 This repository renders FortiGate CLI configuration snippets for a multi-site ADVPN topology using **Ansible + Jinja2**.
 
