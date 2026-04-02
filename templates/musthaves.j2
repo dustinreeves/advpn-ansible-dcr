@@ -3,12 +3,6 @@ config system global
     set admintimeout 0
 end
 
-config system admin
-    edit "admin"
-        set password "{{ admin_password | default('pass') }}"
-    next
-end
-
 config router static
     edit 777
         set dst 172.16.0.0 255.240.0.0

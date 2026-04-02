@@ -128,7 +128,7 @@ advpn:
 
   bgp:
     asn: 65152
-    session_mode: per_overlay
+    session_mode: loopback
     ebgp_multipath: enable
     ibgp_multipath: enable
     additional_path: enable

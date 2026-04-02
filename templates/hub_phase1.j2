@@ -10,7 +10,6 @@ config vpn ipsec phase1-interface
         set net-device disable
 {% else %}
         set net-device {{ net_device }}
-{% endif %}
 {% if bgp.session_mode == "loopback" %}
         set exchange-interface-ip enable
         set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
