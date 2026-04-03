@@ -3,7 +3,7 @@ site_slug: denver
 fgt_hostname: Branch03
 
 lan:
-  interface: port1
+  interface: port10
   ip: 10.120.3.1 255.255.255.0
   subnet: 10.120.3.0 255.255.255.0
   dhcp_start: 10.120.3.100
@@ -19,6 +19,6 @@ lo_bgp:
 
 wan:
   wan1:
-    interface: port10
+    interface: port1
   wan2:
-    interface: port9
+    interface: port2

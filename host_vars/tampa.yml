@@ -3,7 +3,7 @@ site_slug: tampa-fl-b4
 fgt_hostname: tampa-fl-b4
 
 lan:
-  interface: port1
+  interface: port10
   ip: 10.120.4.1 255.255.255.0
   subnet: 10.120.4.0 255.255.255.0
   dhcp_start: 10.120.4.100
@@ -19,6 +19,6 @@ lo_bgp:
 
 wan:
   wan1:
-    interface: port10
+    interface: port1
   wan2:
-    interface: port9
+    interface: port2
