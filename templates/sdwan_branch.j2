@@ -15,15 +15,18 @@ config system sdwan
         edit {{ loop.index }}
             set interface "{{ t.name }}"
             set zone "vpnsdwan"
+            set source {{ lo_bgp.ip.split()[0] }}
         next
 {% endfor %}
         edit {{ tunnel_matrix | length + 1 }}
             set interface "{{ wan.wan1.interface }}"
             set zone "inet"
+            set source {{ lo_bgp.ip.split()[0] }}
         next
         edit {{ tunnel_matrix | length + 2 }}
             set interface "{{ wan.wan2.interface }}"
             set zone "inet"
+            set source {{ lo_bgp.ip.split()[0] }}
         next
     end
 
@@ -98,59 +101,9 @@ end
 
 config firewall policy
     edit 0
-        set name "vpnsdwan-to-vpnsdwan"
-        set srcintf "vpnsdwan"
-        set dstintf "vpnsdwan"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-lo-hc"
-        set srcintf "vpnsdwan"
-        set dstintf "{{ lo_hc.interface }}"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-lo-bgp"
-        set srcintf "vpnsdwan"
-        set dstintf "{{ lo_bgp.interface }}"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "lo-bgp-to-vpnsdwan"
-        set srcintf "{{ lo_bgp.interface }}"
-        set dstintf "vpnsdwan"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-Data"
-        set srcintf "vpnsdwan"
-        set dstintf "Data"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "Data-to-vpnsdwan"
-        set srcintf "Data"
-        set dstintf "vpnsdwan"
+        set name "allow-all-trusted"
+        set srcintf "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "vpnsdwan" "Data"
+        set dstintf "vpnsdwan" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "Data"
         set action accept
         set srcaddr "all"
         set dstaddr "all"
@@ -159,7 +112,7 @@ config firewall policy
     next
     edit 0
         set name "Data-to-inet"
-        set srcintf "Data"
+        set srcintf "Data" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}"
         set dstintf "inet"
         set action accept
         set srcaddr "all"
