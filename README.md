@@ -68,6 +68,8 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - IPsec phase2 selectors for each overlay.
 - `hub_tunnel_allowaccess.j2` / `branch_tunnel_allowaccess.j2`
   - Tunnel interface allowaccess behavior.
+- `port_allowaccess_reenable.j2`
+  - Re-applies management `allowaccess` on physical `port*` interfaces (LAN/WAN) at the end of rendering, while intentionally excluding loopback/tunnel interfaces.
 - `sdwan_hub.j2` / `sdwan_branch.j2`
   - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
   - Includes loopback-mode control-plane policies for both `lo.hc` and `lo.bgp` (`vpnsdwan -> loopback`) so BGP-over-loopback sessions are permitted.
@@ -107,6 +109,7 @@ The renderer writes numbered sections under `rendered/<normalized_hostname>/`:
 8. `08-sdwan.conf` (hub) or `08-bgp.conf` (branch)
 9. `09-bgp.conf` (hub)
 10. `10-interhub-ipsec.conf` (hub)
+11. `11-set-allowaccess.conf` (all roles)
 
 Then Ansible assembles all numbered files into:
 
