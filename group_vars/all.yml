@@ -84,8 +84,13 @@ advpn:
         - name: dc01
           server: 10.250.1.1
           detect_mode: remote
+          interval: 1000
+          failtime: 15
+          recoverytime: 10
           members: [1, 2, 3, 4]
-          packetloss_threshold: 5
+          sla_link_cost_factors: [latency, packet-loss]
+          latency_threshold: 100
+          packetloss_threshold: 10
 
         - name: dc02
           server: 10.250.1.2
@@ -97,15 +102,17 @@ advpn:
         - name: dc01
           health_check: dc01
           mode: priority
-          dst: 10.101.1.1/24
+          dst: dc01-lan
           src: rfc1918grp
+          link_cost_factor: latency
           priority_members: [1, 2, 3, 4]
 
         - name: dc02
           health_check: dc01
           mode: priority
-          dst: 10.101.2.0/24
+          dst: dc02-lan
           src: rfc1918grp
+          link_cost_factor: latency
           priority_members: [5, 6, 7, 8]
 
         - name: fallback
