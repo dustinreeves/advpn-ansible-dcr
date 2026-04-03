@@ -345,7 +345,13 @@
         dest: rendered/{{ normalized_hostname }}/10-interhub-ipsec.conf
       when: device_role == "hub"
       delegate_to: localhost
-
+      
+    - name: Render allowaccess http https ssh snmp etc
+      ansible.builtin.template:
+        src: templates/port_allowaccess_reenable.j2
+        dest: rendered/{{ normalized_hostname }}/11-set-allowaccess.conf
+      delegate_to: localhost
+      
     - name: Render full merged config in section order
       ansible.builtin.assemble:
         src: rendered/{{ normalized_hostname }}
