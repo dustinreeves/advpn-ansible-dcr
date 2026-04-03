@@ -5,6 +5,8 @@ It is an **offline config renderer** (templates are rendered on localhost), not 
 
 > Scope: lab/reference automation. Validate output in your own environment before production rollout.
 
+> Scope: lab/reference automation. Validate output in your own environment before production rollout.
+
 The design pattern is:
 - ADVPN overlays over IPsec
 - iBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
