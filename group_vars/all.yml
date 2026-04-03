@@ -106,7 +106,7 @@ advpn:
           failtime: 15
           recoverytime: 10
           members: [9, 10]
-          sla_link_cost_factors: [latency, packet-loss]
+          sla_link_cost_factors: [latency]
           latency_threshold: 100
           packetloss_threshold: 10
 
