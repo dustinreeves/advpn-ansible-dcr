@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
-      - develop
-      - "**"
   workflow_dispatch:
 
 permissions:
@@ -58,9 +55,8 @@ jobs:
             output/**
             artifacts/**
             rendered/**
-            *.cfg
             *.conf
             *.txt
             *.log
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
