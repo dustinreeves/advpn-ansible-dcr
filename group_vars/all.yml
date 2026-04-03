@@ -94,19 +94,26 @@ advpn:
           packetloss_threshold: 5
 
       services:
-        - name: DC01
+        - name: dc01
           health_check: dc01
-          mode: sla
-          tie_break: fib-best-match
-          minimum_sla_meet_members: 1
+          mode: priority
+          dst: 10.101.1.1/24
+          src: rfc1918grp
           priority_members: [1, 2, 3, 4]
 
-        - name: DC02
-          health_check: dc02
-          mode: sla
-          tie_break: fib-best-match
-          minimum_sla_meet_members: 1
+        - name: dc02
+          health_check: dc01
+          mode: priority
+          dst: 10.101.2.0/24
+          src: rfc1918grp
           priority_members: [5, 6, 7, 8]
+
+        - name: fallback
+          health_check: dc01
+          mode: priority
+          dst: rfc1918grp
+          src: rfc1918grp
+          priority_members: [1, 2, 5, 6, 8, 7, 4, 3]
 
       inet_service:
         name: inet
