@@ -1,6 +1,6 @@
 site_name: tampa, fl
-site_slug: tampa-fl-b4
-fgt_hostname: tampa-fl-b4
+site_slug: tampa-fl-branch4
+fgt_hostname: tampa-fl-branch4
 
 lan:
   interface: port10
