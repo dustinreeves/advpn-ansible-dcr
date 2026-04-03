@@ -170,7 +170,18 @@ Behavior:
 - Pressing Enter keeps each default.
 - Writes `host_vars/<output>.yml`.
 
----
+Use the new helper to reduce missed steps when adding a branch:
+
+```bash
+python3 scripts/add_spoke_wizard.py \
+  --name miami \
+  --ansible-host 192.168.122.25 \
+  --site-id 15 \
+  --template phoenix \
+  --site-name "miami, fl" \
+  --lo-bgp-ip 10.250.0.15 \
+  --lo-hc-ip 10.250.1.15
+```
 
 ## Guardrails and consistency rules
 

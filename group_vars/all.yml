@@ -279,11 +279,11 @@ advpn:
     #   per_overlay = legacy/compatibility tunnel-interface peering
     # Used by: BGP on loopback (preferred) and ADVPN 1.0 compatibility mode.
     session_mode: loopback
-    # Enables ECMP across eBGP paths.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    ebgp_multipath: enable
-    # Enables ECMP across iBGP paths.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
+    # This lab runs a single ASN (iBGP), so keep eBGP multipath disabled by default.
+    # Used by: eBGP-only topologies (typically not needed in this repo's default design).
+    ebgp_multipath: disable
+    # Primary multipath control for this design (single-ASN iBGP over loopback/per-overlay).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback in this repo.
     ibgp_multipath: enable
     # Enables BGP additional-path capability.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.

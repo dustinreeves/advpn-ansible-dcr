@@ -1,0 +1,120 @@
+{% if advpn_render_section == "phase1" %}
+config vpn ipsec phase1-interface
+{% if device_role == "hub" %}
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+{% set overlay_network = t.overlay_subnet.split(' ')[0].split('.') %}
+    edit "{{ t.name }}"
+        set type dynamic
+        set interface "{{ wan[t.underlay_wan].interface }}"
+        set ike-version {{ ike_version }}
+        set peertype any
+{% if bgp.session_mode == "loopback" %}
+        set net-device disable
+        set exchange-interface-ip enable
+        set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% else %}
+        set net-device {{ net_device }}
+        set mode-cfg {{ mode_cfg }}
+{% endif %}
+        set proposal {{ proposal }}
+        set add-route {{ add_route }}
+        set localid "{{ fgt_hostname }}"
+        set dpd {{ dpd }}
+        set npu-offload disable
+        set dhgrp {{ dhgrp }}
+        set auto-discovery-sender enable
+        set auto-discovery-forwarder enable
+        set network-overlay {{ network_overlay }}
+        set network-id {{ t.network_id }}
+{% if bgp.session_mode != "loopback" %}
+        set ipv4-start-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.20
+        set ipv4-end-ip {{ overlay_network[0] }}.{{ overlay_network[1] }}.{{ overlay_network[2] }}.250
+        set ipv4-netmask 255.255.255.0
+{% endif %}
+        set psksecret {{ psksecret }}
+        set dpd-retryinterval {{ dpd_retryinterval }}
+    next
+{% endfor %}
+{% else %}
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set interface "{{ wan[t.branch_wan].interface }}"
+        set ike-version {{ ike_version }}
+        set peertype any
+{% if bgp.session_mode == "loopback" %}
+        set net-device disable
+{% else %}
+        set net-device {{ net_device }}
+{% endif %}
+{% if bgp.session_mode == "loopback" %}
+        set exchange-interface-ip enable
+        set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% else %}
+        set mode-cfg {{ mode_cfg }}
+{% endif %}
+        set proposal {{ proposal }}
+        set add-route {{ add_route }}
+        set localid "{{ site_slug }}-{{ site_id }}-{{ t.network_id }}"
+        set dpd {{ dpd }}
+        set dpd-retryinterval {{ dpd_retryinterval }}
+        set dhgrp {{ dhgrp }}
+        set auto-discovery-receiver {{ auto_discovery_receiver }}
+        set auto-discovery-shortcuts {{ auto_discovery_shortcuts }}
+        set network-overlay {{ network_overlay }}
+        set network-id {{ t.network_id }}
+        set remote-gw {{ hubs[t.hub][t.hub_wan ~ '_gw'] }}
+        set psksecret {{ psksecret }}
+    next
+{% endfor %}
+{% endif %}
+end
+{% elif advpn_render_section == "allowaccess" %}
+config system interface
+{% if device_role == "hub" %}
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+{% set overlay_network = t.overlay_subnet.split()[0] %}
+{% set overlay_prefix = overlay_network.rsplit('.', 1)[0] %}
+    edit "{{ t.name }}"
+        set vdom "root"
+{% if bgp.session_mode != "loopback" %}
+        set ip {{ overlay_prefix }}.1 255.255.255.255
+{% endif %}
+        set allowaccess ping
+        set type tunnel
+{% if bgp.session_mode != "loopback" %}
+        set remote-ip {{ overlay_prefix }}.254 255.255.255.0
+{% endif %}
+        set interface "{{ wan[t.underlay_wan].interface }}"
+    next
+{% endfor %}
+{% else %}
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set allowaccess ping
+    next
+{% endfor %}
+{% endif %}
+end
+{% elif advpn_render_section == "phase2" %}
+config vpn ipsec phase2-interface
+{% if device_role == "hub" %}
+{% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
+    edit "{{ t.name }}"
+        set phase1name "{{ t.name }}"
+        set proposal {{ phase2.proposal }}
+        set dhgrp {{ phase2.dhgrp }}
+        set keylifeseconds {{ phase2.keylifeseconds }}
+    next
+{% endfor %}
+{% else %}
+{% for t in tunnel_matrix %}
+    edit "{{ t.name }}"
+        set phase1name "{{ t.name }}"
+        set proposal {{ phase2.proposal }}
+        set dhgrp {{ phase2.dhgrp }}
+        set keylifeseconds {{ phase2.keylifeseconds }}
+    next
+{% endfor %}
+{% endif %}
+end
+{% endif %}
