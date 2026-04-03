@@ -3,7 +3,7 @@ site_slug: dallas
 fgt_hostname: Hub01
 
 lan:
-  interface: port1
+  interface: port10
   ip: 10.101.1.1 255.255.255.0
   subnet: 10.101.1.0 255.255.255.0
   dhcp_start: 10.101.1.100
@@ -19,9 +19,9 @@ lo_bgp:
 
 wan:
   wan1:
-    interface: port10
+    interface: port1
   wan2:
-    interface: port9
+    interface: port2
 
 hub_overlay_interfaces:
   - name: hub1-wan1-vpn1
