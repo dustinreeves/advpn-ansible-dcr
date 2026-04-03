@@ -35,9 +35,24 @@ config system sdwan
 {% if hc.detect_mode is defined %}
             set detect-mode {{ hc.detect_mode }}
 {% endif %}
+{% if hc.interval is defined %}
+            set interval {{ hc.interval }}
+{% endif %}
+{% if hc.failtime is defined %}
+            set failtime {{ hc.failtime }}
+{% endif %}
+{% if hc.recoverytime is defined %}
+            set recoverytime {{ hc.recoverytime }}
+{% endif %}
             set members {{ hc.members | join(' ') }}
             config sla
                 edit 1
+{% if hc.sla_link_cost_factors is defined %}
+                    set link-cost-factor {{ hc.sla_link_cost_factors | join(' ') }}
+{% endif %}
+{% if hc.latency_threshold is defined %}
+                    set latency-threshold {{ hc.latency_threshold }}
+{% endif %}
                     set packetloss-threshold {{ hc.packetloss_threshold }}
                 next
             end
@@ -56,7 +71,7 @@ config system sdwan
 {% if svc.tie_break is defined %}
             set tie-break {{ svc.tie_break }}
 {% endif %}
-            set link-cost-factor packet-loss
+            set link-cost-factor {{ svc.link_cost_factor | default('packet-loss') }}
 {% if svc.minimum_sla_meet_members is defined %}
             set minimum-sla-meet-members {{ svc.minimum_sla_meet_members }}
 {% endif %}

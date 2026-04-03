@@ -37,6 +37,12 @@ config firewall address
     edit "RFC1918-192.168.0.0-16"
         set subnet 192.168.0.0 255.255.0.0
     next
+    edit "dc01-lan"
+        set subnet 10.101.1.0 255.255.255.0
+    next
+    edit "dc02-lan"
+        set subnet 10.101.2.0 255.255.255.0
+    next
 end
 
 config firewall addrgrp
