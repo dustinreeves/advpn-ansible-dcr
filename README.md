@@ -1,6 +1,7 @@
 # FortiGate ADVPN (BGP over Loopback Preferred) - Ansible Renderer
 
-This repository renders FortiGate CLI configuration snippets for a multi-site ADVPN topology using **Ansible + Jinja2**.
+This repository renders FortiGate CLI snippets for a multi-site ADVPN lab using **Ansible + Jinja2**.
+It is an **offline config renderer** (templates are rendered on localhost), not a push/deploy framework.
 
 > Scope: lab/reference automation. Validate output in your own environment before production rollout.
 
@@ -12,18 +13,39 @@ The design pattern is:
 
 ---
 
-## 1) How the whole workflow works
+## What is currently configured by default (source-of-truth snapshot)
 
-1. Inventory defines devices and groups (`hub_devices`, `branch_devices`).
-2. Ansible loads variable layers in this order:
-   - `group_vars/all.yml` (global defaults)
-   - `group_vars/<group>.yml` (role defaults)
-   - `host_vars/<host>.yml` (site-specific overrides)
-3. `playbook.yml` validates required inputs in `pre_tasks`.
-4. `playbook.yml` renders templates in deterministic numeric order (`01-*`, `02-*`, ...).
-5. Ansible assembles rendered sections into a single full config per host in `rendered/`.
+The default inventory and vars currently describe:
 
-The output is rendered locally (via `delegate_to: localhost`), so this repo can be used as an offline config generator.
+- **2 hubs**: `dallas`, `chicago`
+- **4 branches**: `phoenix`, `atlanta`, `denver`, `tampa`
+- **BGP session mode**: `loopback` (default)
+- **ASN**: `65152`
+- **Tunnel matrix**: 8 branch→hub overlays (`network_id` 1-8)
+- **Site IDs**:
+  - `dallas: 1`
+  - `chicago: 2`
+  - `phoenix: 11`
+  - `atlanta: 12`
+  - `denver: 13`
+  - `tampa: 14`
+
+### Device defaults in this repo
+
+| Inventory host | Role | `fgt_hostname` | `site_slug` |
+|---|---|---|---|
+| dallas | hub | Hub01 | dallas |
+| chicago | hub | Hub02 | chicago |
+| phoenix | branch | Branch01 | phoenix |
+| atlanta | branch | atlanta-ga-branch2 | atlanta |
+| denver | branch | Branch03 | denver |
+| tampa | branch | tampa-fl-b4 | tampa-fl-b4 |
+
+### Underlay defaults
+
+- Global SSH defaults are set in `inventory.yml` (`ansible_connection: ssh`, `ansible_user: admin`, etc.).
+- Hub WAN gateway metadata exists under `all.vars.hubs` (used by templates such as branch phase1 remote-gw mapping).
+- Host WAN interfaces default to `port1`/`port2` in all included `host_vars/*` files.
 
 ---
 
@@ -98,75 +120,85 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
 
 ---
 
-## 3) Render sequence (per host)
+## Template/render order (actual playbook behavior)
 
-The renderer writes numbered sections under `rendered/<normalized_hostname>/`:
+### Always rendered
 
-1. `01-baseline.conf`
-2. `02-interfaces.conf`
-3. `03-phase1.conf`
-4. `04-tunnel-allowaccess.conf`
-5. `05-phase2.conf`
-6. `06-community-lists.conf` (hub) or `06-route-maps.conf` (branch)
-7. `07-route-maps.conf` (hub) or `07-sdwan.conf` (branch)
-8. `08-sdwan.conf` (hub) or `08-bgp.conf` (branch)
-9. `09-bgp.conf` (hub)
-10. `10-interhub-ipsec.conf` (hub)
+1. `01-baseline.conf` ← `templates/musthaves.j2`
+2. `02-interfaces.conf` ← `templates/interfaces.j2`
+3. `11-set-allowaccess.conf` ← `templates/port_allowaccess_reenable.j2`
 
-Then Ansible assembles all numbered files into:
+### Hub-only rendered sections
 
-- `rendered/<normalized_hostname>-full-<timestamp>.conf`
+3. `03-phase1.conf` ← `templates/hub_phase1.j2`
+4. `04-tunnel-allowaccess.conf` ← `templates/hub_tunnel_allowaccess.j2`
+5. `05-phase2.conf` ← `templates/hub_phase2.j2`
+6. `06-community-lists.conf` ← `templates/community_lists.j2`
+7. `07-route-maps.conf` ← `templates/route_maps_hub.j2`
+8. `08-sdwan.conf` ← `templates/sdwan_hub.j2`
+9. `09-bgp.conf` ← `templates/bgp_hub.j2`
+10. `10-interhub-ipsec.conf` ← `templates/hub_interhub_ipsec.j2`
 
----
+### Branch-only rendered sections
 
-## Overlay variable layout recommendation
+3. `03-phase1.conf` ← `templates/branch_phase1.j2`
+4. `04-tunnel-allowaccess.conf` ← `templates/branch_tunnel_allowaccess.j2`
+5. `05-phase2.conf` ← `templates/branch_phase2.j2`
+6. `06-route-maps.conf` ← `templates/route_maps_branch.j2`
+7. `07-sdwan.conf` ← `templates/sdwan_branch.j2`
+8. `08-bgp.conf` ← `templates/bgp_branch.j2`
 
-For maintainability, keep overlay values grouped by function instead of top-level flat keys:
+### Why `port_allowaccess_reenable.j2` is last
 
-- `advpn.phase1` => IKE/phase1 profile defaults.
-- `advpn.site_identifiers` => site inventory map used to assign per-site IDs (valid range `1..254`; branches must use `3..254`, with hubs pinned as `dallas=1`, `chicago=2`).
-- `advpn.phase2` => phase2 selectors and timers.
-- `advpn.tunnels` => overlay matrix (`name`, hub, WAN mapping, `network_id`).
-- `branch_tunnels` (optional, per `host_vars/<branch>.yml`) => branch-specific tunnel matrix override when a branch needs a different set of `network_id` mappings.
-- `advpn.sdwan.branch` and `advpn.sdwan.hub` => role-specific SD-WAN behavior.
-- `advpn.branch` => branch-only route-map and BGP route-map naming.
-- `advpn.interhub_ipsec` => hub interconnect profile.
-- `advpn.bgp.session_mode` => BGP peering method: `loopback` (current default/recommended) or `per_overlay` (legacy compatibility mode).
-
-`playbook.yml` normalizes these nested keys back into the template variables used throughout the repo. This also keeps backward compatibility with older flat variable names while encouraging the cleaner nested model.
-To avoid double maintenance, branch `preferable` route-maps are auto-derived from the effective tunnel matrix (global `advpn.tunnels` or per-branch `branch_tunnels`) using community format `<bgp.asn>:<network_id>`, and `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` when not explicitly provided.
+That template re-applies `allowaccess ping http https ssh snmp` to **physical `port*` interfaces only** (LAN/WAN), intentionally excluding loopback/tunnel interfaces.
 
 ---
 
-## 4) Current default topology/profile in this repo
+## Repository layout
 
-- Hubs
-  - `dallas` => `fgt_hostname: Hub01`
-  - `chicago` => `fgt_hostname: Hub02`
-- Branches
-  - `phoenix` => `fgt_hostname: Branch01`
-  - `atlanta` => `fgt_hostname: Branch02`
-  - `denver` => `fgt_hostname: Branch03`
-- Site identifiers
-  - `dallas` => `1` (HUB1)
-  - `chicago` => `2` (HUB2)
-  - `phoenix` => `3`
-  - `atlanta` => `4`
-  - `denver` => `5`
-- WAN interfaces default to DHCP mode when no static WAN IP is defined in host vars.
-- LAN and DHCP pools are defined per site in host vars.
-- `lo.hc` is reserved for health-check use.
-- `lo.bgp` is the preferred control-plane/BGP loopback and is used for BGP peering, update-source, and router-id.
+- `playbook.yml` - main renderer and variable normalization logic.
+- `playbook-render.yml` - thin wrapper importing `playbook.yml`.
+- `inventory.yml` - hosts, groups, SSH settings, and hub underlay metadata.
+- `group_vars/all.yml` - global ADVPN/BGP/SD-WAN defaults in nested `advpn.*` structure.
+- `group_vars/hub_devices.yml` - hub role marker and hub community-list defaults.
+- `group_vars/branch_devices.yml` - branch role marker.
+- `host_vars/*.yml` - site-specific interfaces, loopbacks, LAN/DHCP, overlay/hub extras.
+- `templates/*.j2` - FortiGate CLI fragments rendered per role.
+- `scripts/host_vars_wizard.py` - helper to clone and prompt through a `host_vars` template.
 
 ---
 
-## 5) How to run
+## Variable model (current design)
+
+Primary defaults live in nested keys under `advpn`:
+
+- `advpn.site_identifiers`
+- `advpn.phase1`
+- `advpn.phase2`
+- `advpn.tunnels`
+- `advpn.sdwan.branch`
+- `advpn.sdwan.hub`
+- `advpn.bgp`
+- `advpn.branch.route_maps`
+- `advpn.interhub_ipsec`
+
+`playbook.yml` maps these into legacy/template variable names with `set_fact`, allowing compatibility with older flat keys where present.
+
+### Derived behavior implemented in playbook
+
+- Branch preferred route-maps are auto-derived from effective tunnel matrix (`advpn.tunnels` or per-branch `branch_tunnels`) with community format `<asn>:<network_id>`.
+- `branch_bgp_route_maps` is derived from `advpn.branch.route_maps.fail` unless explicitly overridden.
+- `site_id` is validated to be `1..254`; branches must be `>=3`; `dallas` is pinned to `1`; `chicago` pinned to `2`.
+
+---
+
+## Running the renderer
 
 ```bash
 ansible-playbook -i inventory.yml playbook.yml
 ```
 
-Optional checks:
+Useful checks:
 
 ```bash
 ansible-inventory -i inventory.yml --graph
@@ -175,7 +207,7 @@ ansible-playbook -i inventory.yml playbook.yml --syntax-check
 
 ---
 
-## 6) Creating/updating site host vars
+## Creating new site host vars
 
 Interactive mode:
 
@@ -183,7 +215,7 @@ Interactive mode:
 python3 scripts/host_vars_wizard.py
 ```
 
-Non-interactive template/output selection:
+Non-interactive template/output:
 
 ```bash
 python3 scripts/host_vars_wizard.py --template phoenix --output newsite
@@ -228,36 +260,18 @@ Tip: keep using `host_vars_wizard.py` when you want to answer every field intera
 
 `playbook.yml` asserts required keys before rendering so invalid host definitions fail early.
 
-Important conventions:
-- `host_vars/<name>.yml` filename must match inventory hostname exactly.
-- Role-specific fields must exist for the matching device role.
-- Keep addressing inputs in host vars authoritative; templates are designed to render directly from those values.
+- Loads an existing `host_vars/<template>.yml` file.
+- Prompts for every key path recursively.
+- Pressing Enter keeps each default.
+- Writes `host_vars/<output>.yml`.
 
 ---
 
-## 8) Multi-hub / multi-overlay planning checklist alignment
+## Guardrails and consistency rules
 
-This repo now directly supports the following recommended ADVPN controls (loopback-first):
+- `host_vars/<name>.yml` filename must match inventory hostname.
+- `device_role` must be `hub` or `branch`.
+- Hub-only required keys (e.g., `hub_overlay_interfaces`, `interhub`, `hub_community_lists[...]`) are validated before rendering.
+- Branch-only required keys (LAN subnet + DHCP ranges + loopbacks) are validated before rendering.
+- Keep addressing data in `host_vars` authoritative; templates are intentionally thin.
 
-- BGP loopback peering with `lo.bgp` update-source and router-id on both hubs and branches.
-- Default BGP session mode set to loopback in `group_vars/all.yml` (`advpn.bgp.session_mode: loopback`).
-- Branch SD-WAN health-check source defaults to branch `lo.bgp` (override per check if needed).
-- Optional SD-WAN health-check `detect_mode` (for example `remote`) on branch and hub.
-- Hub SD-WAN route services configurable from vars (including manual mode + FIB tie-break).
-- Branch SD-WAN services configurable for SLA-driven pathing (`mode`, `tie_break`, `minimum_sla_meet_members`).
-- Explicit branch policy for `lo.bgp -> vpnsdwan` in addition to `vpnsdwan -> lo.bgp`.
-
-### Recommended operating mode
-
-For new deployments, use BGP-over-loopback as the standard pattern:
-
-- Keep `advpn.bgp.session_mode: loopback` (default).
-- Assign unique `/32` loopback addresses per site for `lo.bgp`.
-- Keep SD-WAN and policy controls allowing both directions between overlay zone(s) and loopbacks.
-- Treat `per_overlay` mode as migration/compatibility fallback only.
-
-Items still operator-defined by design (must be planned in your inventory/vars):
-
-- Site ID numbering conventions (for example 3-254) and how they map into your own naming/address plan.
-- Exact BGP peering subnet plan and per-site /32 allocations.
-- Overlay count/topology design decisions between hubs and spokes.
