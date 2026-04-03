@@ -32,7 +32,6 @@ config system sdwan
 {% for hc in sdwan_health_checks %}
         edit "{{ hc.name }}"
             set server "{{ hc.server }}"
-            set source {{ hc.source | default(lo_bgp.ip.split()[0]) }}
 {% if hc.detect_mode is defined %}
             set detect-mode {{ hc.detect_mode }}
 {% endif %}
