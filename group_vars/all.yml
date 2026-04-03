@@ -13,7 +13,7 @@ advpn:
     dhgrp: "19 14"
     psksecret: fortinet
     net_device: enable
-    mode_cfg: enable
+    mode_cfg: disable
     add_route: disable
     dpd: on-idle
     dpd_retryinterval: 5
