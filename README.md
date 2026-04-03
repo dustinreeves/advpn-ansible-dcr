@@ -1,9 +1,15 @@
-# FortiGate ADVPN Ansible Renderer (Lab Defaults Documented)
+# FortiGate ADVPN (BGP over Loopback Preferred) - Ansible Renderer
 
 This repository renders FortiGate CLI snippets for a multi-site ADVPN lab using **Ansible + Jinja2**.
 It is an **offline config renderer** (templates are rendered on localhost), not a push/deploy framework.
 
-> Lab note: defaults in this repo are intentionally opinionated and should be reviewed before production use.
+> Scope: lab/reference automation. Validate output in your own environment before production rollout.
+
+The design pattern is:
+- ADVPN overlays over IPsec
+- iBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
+- SD-WAN policy steering
+- Hub/branch role-specific templates
 
 ---
 
@@ -43,17 +49,74 @@ The default inventory and vars currently describe:
 
 ---
 
-## How rendering works
+## 2) Repository layout and what each module does
 
-1. Inventory groups hosts into `hub_devices` and `branch_devices`.
-2. Vars are loaded with standard Ansible precedence (global → group → host).
-3. `playbook.yml` validates required values in `pre_tasks`.
-4. `playbook.yml` normalizes nested `advpn.*` values into template-friendly variables.
-5. Templates are rendered in deterministic numbered order to `rendered/<normalized_hostname>/`.
-6. All numbered sections are assembled into one full config:
-   - `rendered/<normalized_hostname>-full-<timestamp>.conf`
+### Core playbooks
 
-Rendering is delegated to localhost, so you can run this without FortiGate API access.
+- `playbook.yml`
+  - Main orchestration entrypoint.
+  - Creates output directories.
+  - Validates required vars (common + hub-specific + branch-specific).
+  - Renders each template section.
+  - Assembles final merged config in section order.
+- `playbook-render.yml`
+  - Thin wrapper that imports `playbook.yml`.
+
+### Inventory and variable model
+
+- `inventory.yml`
+  - Device list, group membership, and Ansible login settings.
+- `group_vars/all.yml`
+  - Global ADVPN/IPsec/SD-WAN/BGP/route-map defaults used by all hosts.
+  - Recommended structure is now nested under `advpn.*` (for example: `advpn.phase1`, `advpn.phase2`, `advpn.tunnels`, `advpn.sdwan`, `advpn.branch`, `advpn.interhub_ipsec`) so related overlay settings stay grouped.
+- `group_vars/hub_devices.yml`
+  - Hub role marker and hub-only defaults.
+- `group_vars/branch_devices.yml`
+  - Branch role marker and branch-only defaults.
+- `host_vars/*.yml`
+  - Per-site addressing and overrides (LAN, WAN mode/IP, hostnames, etc.).
+  - ADVPN 2.0 style loopback separation:
+    - `lo_hc` => SD-WAN/health-check loopback (`lo.hc`)
+    - `lo_bgp` => BGP peering/update-source loopback (`lo.bgp`)
+
+### Template modules (`templates/*.j2`)
+
+- `musthaves.j2`
+  - System baseline (hostname, admin timeout/password, RFC1918 objects, static blackhole routes).
+- `interfaces.j2`
+  - LAN/WAN interface config, loopbacks (`lo.hc` and `lo.bgp`), and DHCP server block (when LAN DHCP range is set).
+- `advpn.j2`
+  - Consolidated ADVPN template (hub + branch) used to render:
+    - IPsec phase1-interface overlays
+    - tunnel allowaccess/interface behavior
+    - IPsec phase2 selectors
+- `sdwan_hub.j2` / `sdwan_branch.j2`
+  - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
+  - Includes loopback-mode control-plane policies for both `lo.hc` and `lo.bgp` (`vpnsdwan -> loopback`) so BGP-over-loopback sessions are permitted.
+  - Supports per-service SD-WAN mode tuning (`manual`, `sla`, etc.), tie-break behavior, and minimum SLA member controls via vars.
+- `bgp_hub.j2` / `bgp_branch.j2`
+  - BGP policy and peering model:
+    - `session_mode: loopback` (recommended/current default): loopback-based neighbor definitions with update-source from `lo.bgp`.
+    - `session_mode: per_overlay` (legacy compatibility): per-overlay interface-neighbor style peering.
+    - hubs: neighbor-groups + neighbor-ranges
+    - branches: route-map driven neighbor handling and network advertisement
+  - Router-ID is set from `lo_bgp` automatically in loopback mode.
+- `community_lists.j2`
+  - Hub community lists used by routing policy.
+- `route_maps_hub.j2` / `route_maps_branch.j2`
+  - Route-map policy for route tagging, preference, and fail handling.
+- `hub_interhub_ipsec.j2`
+  - Direct hub-to-hub IPsec link and policy.
+
+### Utility scripts
+
+- `scripts/host_vars_wizard.py`
+  - Interactive/non-interactive helper to create a new `host_vars/<site>.yml` from an existing template.
+- `scripts/add_spoke_wizard.py`
+  - One-shot spoke onboarding helper that can:
+    - generate `host_vars/<spoke>.yml` from a template
+    - add the spoke to `inventory.yml` under `branch_devices`
+    - insert a new `advpn.site_identifiers.<spoke>` entry in `group_vars/all.yml`
 
 ---
 
@@ -159,6 +222,43 @@ python3 scripts/host_vars_wizard.py --template phoenix --output newsite
 ```
 
 Behavior:
+- Reads `host_vars/<template>.yml` as defaults.
+- Prompts for every key path.
+- Enter keeps default values.
+- Writes `host_vars/<output>.yml`.
+
+---
+
+
+### Recommended next step as the repo grows: automate spoke onboarding
+
+Yes—at this size, automating spoke onboarding is worth it.
+
+Use the new helper to reduce missed steps when adding a branch:
+
+```bash
+python3 scripts/add_spoke_wizard.py \
+  --name miami \
+  --ansible-host 192.168.122.25 \
+  --site-id 15 \
+  --template phoenix \
+  --site-name "miami, fl" \
+  --lo-bgp-ip 10.250.0.15 \
+  --lo-hc-ip 10.250.1.15
+```
+
+This command updates three places in one run:
+1. `host_vars/miami.yml`
+2. `inventory.yml` (`all.children.branch_devices.hosts.miami`)
+3. `group_vars/all.yml` (`advpn.site_identifiers.miami`)
+
+Tip: keep using `host_vars_wizard.py` when you want to answer every field interactively. Use `add_spoke_wizard.py` when you want faster, safer bulk onboarding.
+
+---
+
+## 7) Guardrails and validation
+
+`playbook.yml` asserts required keys before rendering so invalid host definitions fail early.
 
 - Loads an existing `host_vars/<template>.yml` file.
 - Prompts for every key path recursively.

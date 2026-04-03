@@ -248,25 +248,12 @@
         dest: rendered/{{ normalized_hostname }}/02-interfaces.conf
       delegate_to: localhost
 
-    - name: Render hub phase1 config
+    - name: Render ADVPN phase1 config
       ansible.builtin.template:
-        src: templates/hub_phase1.j2
+        src: templates/advpn.j2
         dest: rendered/{{ normalized_hostname }}/03-phase1.conf
-      when: device_role == "hub"
-      delegate_to: localhost
-
-    - name: Render hub tunnel allowaccess config
-      ansible.builtin.template:
-        src: templates/hub_tunnel_allowaccess.j2
-        dest: rendered/{{ normalized_hostname }}/04-tunnel-allowaccess.conf
-      when: device_role == "hub"
-      delegate_to: localhost
-
-    - name: Render hub phase2 config
-      ansible.builtin.template:
-        src: templates/hub_phase2.j2
-        dest: rendered/{{ normalized_hostname }}/05-phase2.conf
-      when: device_role == "hub"
+      vars:
+        advpn_render_section: phase1
       delegate_to: localhost
 
     - name: Render hub community lists
@@ -297,25 +284,20 @@
       when: device_role == "hub"
       delegate_to: localhost
 
-    - name: Render branch phase1 config
+    - name: Render ADVPN tunnel allowaccess config
       ansible.builtin.template:
-        src: templates/branch_phase1.j2
-        dest: rendered/{{ normalized_hostname }}/03-phase1.conf
-      when: device_role == "branch"
-      delegate_to: localhost
-
-    - name: Render branch tunnel allowaccess config
-      ansible.builtin.template:
-        src: templates/branch_tunnel_allowaccess.j2
+        src: templates/advpn.j2
         dest: rendered/{{ normalized_hostname }}/04-tunnel-allowaccess.conf
-      when: device_role == "branch"
+      vars:
+        advpn_render_section: allowaccess
       delegate_to: localhost
 
-    - name: Render branch phase2 config
+    - name: Render ADVPN phase2 config
       ansible.builtin.template:
-        src: templates/branch_phase2.j2
+        src: templates/advpn.j2
         dest: rendered/{{ normalized_hostname }}/05-phase2.conf
-      when: device_role == "branch"
+      vars:
+        advpn_render_section: phase2
       delegate_to: localhost
 
     - name: Render branch route-maps
