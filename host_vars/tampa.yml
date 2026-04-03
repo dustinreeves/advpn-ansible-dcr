@@ -1,0 +1,24 @@
+site_name: tampa, fl
+site_slug: tampa-fl-b4
+fgt_hostname: tampa-fl-b4
+
+lan:
+  interface: port10
+  ip: 10.120.4.1 255.255.255.0
+  subnet: 10.120.4.0 255.255.255.0
+  dhcp_start: 10.120.4.100
+  dhcp_end: 10.120.4.199
+
+lo_hc:
+  interface: lo.hc
+  ip: 10.250.1.14 255.255.255.255
+
+lo_bgp:
+  interface: lo.bgp
+  ip: 10.250.0.14 255.255.255.255
+
+wan:
+  wan1:
+    interface: port1
+  wan2:
+    interface: port2

@@ -15,6 +15,7 @@ config system sdwan
         edit {{ loop.index }}
             set interface "{{ t.name }}"
             set zone "vpnsdwan"
+            set source {{ lo_bgp.ip.split()[0] }}
         next
 {% endfor %}
         edit {{ tunnel_matrix | length + 1 }}
@@ -31,13 +32,27 @@ config system sdwan
 {% for hc in sdwan_health_checks %}
         edit "{{ hc.name }}"
             set server "{{ hc.server }}"
-            set source {{ hc.source | default(lo_bgp.ip.split()[0]) }}
 {% if hc.detect_mode is defined %}
             set detect-mode {{ hc.detect_mode }}
+{% endif %}
+{% if hc.interval is defined %}
+            set interval {{ hc.interval }}
+{% endif %}
+{% if hc.failtime is defined %}
+            set failtime {{ hc.failtime }}
+{% endif %}
+{% if hc.recoverytime is defined %}
+            set recoverytime {{ hc.recoverytime }}
 {% endif %}
             set members {{ hc.members | join(' ') }}
             config sla
                 edit 1
+{% if hc.sla_link_cost_factors is defined %}
+                    set link-cost-factor {{ hc.sla_link_cost_factors | join(' ') }}
+{% endif %}
+{% if hc.latency_threshold is defined %}
+                    set latency-threshold {{ hc.latency_threshold }}
+{% endif %}
                     set packetloss-threshold {{ hc.packetloss_threshold }}
                 next
             end
@@ -51,12 +66,11 @@ config system sdwan
             set name "{{ svc.name }}"
             set mode {{ svc.mode | default('priority') }}
             set dst "{{ svc.dst | default('all') }}"
-            set src "{{ svc.src | default('all') }}"
             set health-check "{{ svc.health_check }}"
 {% if svc.tie_break is defined %}
             set tie-break {{ svc.tie_break }}
 {% endif %}
-            set link-cost-factor packet-loss
+            set link-cost-factor {{ svc.link_cost_factor | default('packet-loss') }}
 {% if svc.minimum_sla_meet_members is defined %}
             set minimum-sla-meet-members {{ svc.minimum_sla_meet_members }}
 {% endif %}
@@ -67,7 +81,6 @@ config system sdwan
             set name "{{ sdwan_inet_service.name }}"
             set dst "{{ sdwan_inet_service.dst }}"
             set dst-negate {{ sdwan_inet_service.dst_negate }}
-            set src "{{ sdwan_inet_service.src }}"
             set priority-zone "inet"
             set priority-members {{ tunnel_matrix | length + 1 }} {{ tunnel_matrix | length + 2 }}
         next
@@ -83,59 +96,9 @@ end
 
 config firewall policy
     edit 0
-        set name "vpnsdwan-to-vpnsdwan"
-        set srcintf "vpnsdwan"
-        set dstintf "vpnsdwan"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-lo-hc"
-        set srcintf "vpnsdwan"
-        set dstintf "{{ lo_hc.interface }}"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-lo-bgp"
-        set srcintf "vpnsdwan"
-        set dstintf "{{ lo_bgp.interface }}"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "lo-bgp-to-vpnsdwan"
-        set srcintf "{{ lo_bgp.interface }}"
-        set dstintf "vpnsdwan"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "vpnsdwan-to-Data"
-        set srcintf "vpnsdwan"
-        set dstintf "Data"
-        set action accept
-        set srcaddr "all"
-        set dstaddr "all"
-        set schedule "always"
-        set service "ALL"
-    next
-    edit 0
-        set name "Data-to-vpnsdwan"
-        set srcintf "Data"
-        set dstintf "vpnsdwan"
+        set name "allow-all-trusted"
+        set srcintf "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "vpnsdwan" "Data"
+        set dstintf "vpnsdwan" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "Data"
         set action accept
         set srcaddr "all"
         set dstaddr "all"
@@ -144,7 +107,7 @@ config firewall policy
     next
     edit 0
         set name "Data-to-inet"
-        set srcintf "Data"
+        set srcintf "Data" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}"
         set dstintf "inet"
         set action accept
         set srcaddr "all"

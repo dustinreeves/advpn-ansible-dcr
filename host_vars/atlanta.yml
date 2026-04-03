@@ -1,9 +1,9 @@
 site_name: atlanta, ga
 site_slug: atlanta
-fgt_hostname: Branch02
+fgt_hostname: atlanta-ga-branch2
 
 lan:
-  interface: port1
+  interface: port10
   ip: 10.120.2.1 255.255.255.0
   subnet: 10.120.2.0 255.255.255.0
   dhcp_start: 10.120.2.100
@@ -11,14 +11,14 @@ lan:
 
 lo_hc:
   interface: lo.hc
-  ip: 10.255.0.12 255.255.255.255
+  ip: 10.250.1.12 255.255.255.255
 
 lo_bgp:
   interface: lo.bgp
-  ip: 10.255.1.12 255.255.255.255
+  ip: 10.250.0.12 255.255.255.255
 
 wan:
   wan1:
-    interface: port10
+    interface: port1
   wan2:
-    interface: port9
+    interface: port2
