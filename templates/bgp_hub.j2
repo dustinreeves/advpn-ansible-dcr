@@ -14,6 +14,8 @@ config router bgp
         edit "BRANCH-LOOPBACK"
             set advertisement-interval {{ bgp.advertisement_interval }}
             set link-down-failover {{ bgp.link_down_failover }}
+            set next-hop-self {{ bgp.next_hop_self }}
+            set next-hop-self-rr {{ bgp.next_hop_self_rr }}
             set soft-reconfiguration {{ bgp.soft_reconfiguration }}
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
@@ -30,6 +32,8 @@ config router bgp
         edit "VPN{{ t.network_id }}"
             set advertisement-interval {{ bgp.advertisement_interval }}
             set link-down-failover {{ bgp.link_down_failover }}
+            set next-hop-self {{ bgp.next_hop_self }}
+            set next-hop-self-rr {{ bgp.next_hop_self_rr }}
             set soft-reconfiguration {{ bgp.soft_reconfiguration }}
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}

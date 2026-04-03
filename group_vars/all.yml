@@ -209,6 +209,7 @@ advpn:
     activate6: disable
     capability_graceful_restart6: disable
     next_hop_self: enable
+    next_hop_self_rr: enable
     soft_reconfiguration6: disable
 
   branch:
