@@ -5,7 +5,7 @@ This repository renders FortiGate CLI configuration snippets for a multi-site AD
 
 The design pattern is:
 - ADVPN overlays over IPsec
-- eBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
+- iBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
 - SD-WAN policy steering
 - Hub/branch role-specific templates
 
