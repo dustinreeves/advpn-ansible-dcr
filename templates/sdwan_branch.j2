@@ -21,12 +21,10 @@ config system sdwan
         edit {{ tunnel_matrix | length + 1 }}
             set interface "{{ wan.wan1.interface }}"
             set zone "inet"
-            set source {{ lo_bgp.ip.split()[0] }}
         next
         edit {{ tunnel_matrix | length + 2 }}
             set interface "{{ wan.wan2.interface }}"
             set zone "inet"
-            set source {{ lo_bgp.ip.split()[0] }}
         next
     end
 
@@ -69,7 +67,6 @@ config system sdwan
             set name "{{ svc.name }}"
             set mode {{ svc.mode | default('priority') }}
             set dst "{{ svc.dst | default('all') }}"
-            set src "{{ svc.src | default('all') }}"
             set health-check "{{ svc.health_check }}"
 {% if svc.tie_break is defined %}
             set tie-break {{ svc.tie_break }}
@@ -85,7 +82,6 @@ config system sdwan
             set name "{{ sdwan_inet_service.name }}"
             set dst "{{ sdwan_inet_service.dst }}"
             set dst-negate {{ sdwan_inet_service.dst_negate }}
-            set src "{{ sdwan_inet_service.src }}"
             set priority-zone "inet"
             set priority-members {{ tunnel_matrix | length + 1 }} {{ tunnel_matrix | length + 2 }}
         next
