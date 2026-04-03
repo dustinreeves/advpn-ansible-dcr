@@ -1,6 +1,6 @@
 site_name: phoenix, az
-site_slug: phoenix
-fgt_hostname: Branch01
+site_slug: phoenix-az-branch1
+fgt_hostname: phoenix-az-branch1
 
 lan:
   interface: port10

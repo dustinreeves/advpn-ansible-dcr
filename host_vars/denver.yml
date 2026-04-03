@@ -1,6 +1,6 @@
 site_name: denver, co
-site_slug: denver
-fgt_hostname: Branch03
+site_slug: denver-co-branch3
+fgt_hostname: denver-co-branch3
 
 lan:
   interface: port10
