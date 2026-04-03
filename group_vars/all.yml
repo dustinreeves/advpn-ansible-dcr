@@ -2,10 +2,10 @@ advpn:
   site_identifiers:
     dallas: 1
     chicago: 2
-    phoenix: 3
-    atlanta: 4
-    denver: 5
-    tampa: 6
+    phoenix: 11
+    atlanta: 12
+    denver: 13
+    tampa: 14
 
   phase1:
     ike_version: 2
