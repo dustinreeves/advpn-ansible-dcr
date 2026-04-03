@@ -25,6 +25,13 @@ config router static
         set vrf 0
         set blackhole enable
     next
+    edit 780
+        set dst {{ lan.subnet }}
+        set comment "[Created by ansible template blackhole local lan subnet]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
 end
 
 config firewall address
