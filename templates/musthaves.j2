@@ -25,6 +25,13 @@ config router static
         set vrf 0
         set blackhole enable
     next
+    edit 780
+        set dst {{ lan.subnet }}
+        set comment "[Created by ansible template blackhole local lan subnet]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
 end
 
 config firewall address
@@ -43,6 +50,11 @@ config firewall address
     edit "dc02-lan"
         set subnet 10.101.2.0 255.255.255.0
     next
+{% for spoke in groups['branch_devices'] | default([]) %}
+    edit "{{ hostvars[spoke].site_slug }}-lan"
+        set subnet {{ hostvars[spoke].lan.subnet }}
+    next
+{% endfor %}
 end
 
 config firewall addrgrp

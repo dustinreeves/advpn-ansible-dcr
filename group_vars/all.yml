@@ -98,6 +98,17 @@ advpn:
           members: [5, 6, 7, 8]
           packetloss_threshold: 5
 
+        - name: fallback-inet
+          server: 1.1.1.1
+          detect_mode: remote
+          interval: 1000
+          failtime: 15
+          recoverytime: 10
+          members: [1, 2, 3, 4, 5, 6, 7, 8]
+          sla_link_cost_factors: [latency, packet-loss]
+          latency_threshold: 100
+          packetloss_threshold: 10
+
       services:
         - name: dc01
           health_check: dc01
@@ -116,7 +127,7 @@ advpn:
           priority_members: [5, 6, 7, 8]
 
         - name: fallback
-          health_check: dc01
+          health_check: fallback-inet
           mode: priority
           dst: rfc1918grp
           src: rfc1918grp
