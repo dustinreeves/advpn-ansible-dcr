@@ -96,7 +96,8 @@ advpn:
           server: 10.250.1.2
           detect_mode: remote
           members: [5, 6, 7, 8]
-          packetloss_threshold: 5
+          latency_threshold: 100
+          packetloss_threshold: 10
 
         - name: fallback_1.1.1.1
           server: 1.1.1.1
@@ -104,7 +105,7 @@ advpn:
           interval: 1000
           failtime: 15
           recoverytime: 10
-          members: [1, 2, 3, 4, 5, 6, 7, 8]
+          members: [9, 10]
           sla_link_cost_factors: [latency, packet-loss]
           latency_threshold: 100
           packetloss_threshold: 10
@@ -116,6 +117,7 @@ advpn:
           dst: dc01-lan
           src: rfc1918grp
           link_cost_factor: latency
+          minimum_sla_meet_members: 1
           priority_members: [1, 2, 3, 4]
 
         - name: dc02
@@ -124,6 +126,7 @@ advpn:
           dst: dc02-lan
           src: rfc1918grp
           link_cost_factor: latency
+          minimum_sla_meet_members: 1
           priority_members: [5, 6, 7, 8]
 
         - name: fallback
