@@ -1,4 +1,6 @@
 advpn:
+  # Map each site name to its ADVPN site-id / overlay identifier.
+  # Used by: ADVPN 1.0 and ADVPN 2.0 (also referenced by BGP policies for both modes).
   site_identifiers:
     dallas: 1
     chicago: 2
@@ -8,27 +10,65 @@ advpn:
     tampa: 14
 
   phase1:
+    # IKE version for all overlay phase1-interface tunnels.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     ike_version: 2
+    # Encryption/auth proposal for phase1.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
+    # Diffie-Hellman groups for phase1 key exchange.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     dhgrp: "19 14"
+    # Pre-shared key for phase1.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     psksecret: fortinet
+    # Enables net-device behavior on tunnel interfaces.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     net_device: enable
+    # Enables/disables mode-cfg.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     mode_cfg: disable
+    # Controls automatic static route creation by IPsec phase1.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     add_route: disable
+    # Dead Peer Detection behavior.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd: on-idle
+    # DPD retry interval (seconds).
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd_retryinterval: 5
+    # Enables shortcut receiver role on hub side.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     auto_discovery_receiver: enable
+    # Controls ADVPN shortcut behavior.
+    # Used by: ADVPN 1.0 and ADVPN 2.0 (core ADVPN behavior).
     auto_discovery_shortcuts: dependent
+    # Enables network overlay capability for ADVPN 2.0 style overlays.
+    # Used by: ADVPN 2.0 primarily (kept compatible with ADVPN 1.0 deployments).
     network_overlay: enable
 
   phase2:
+    # Encryption/auth proposal for phase2 selectors.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
+    # Diffie-Hellman groups for phase2 rekey.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     dhgrp: "19 14"
+    # Auto-negotiate phase2 on tunnel bring-up.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     auto_negotiate: enable
+    # Phase2 SA lifetime in seconds.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     keylifeseconds: 43200
+    # Source selector for phase2 (0/0 = route-based any-any selector).
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     src_subnet: "0.0.0.0 0.0.0.0"
+    # Destination selector for phase2 (0/0 = route-based any-any selector).
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
     dst_subnet: "0.0.0.0 0.0.0.0"
 
+  # Overlay tunnel matrix (branch WAN -> hub WAN + network-id mapping).
+  # Used by: ADVPN 1.0 and ADVPN 2.0. BGP (both overlay and loopback modes) references this for policy mapping.
   tunnels:
     - name: wan1-vpn1
       branch_wan: wan1
@@ -82,14 +122,32 @@ advpn:
     branch:
       health_checks:
         - name: dc01
+          # Remote probe target for SD-WAN SLA health check.
+          # Used by: ADVPN 1.0 and ADVPN 2.0 data-plane behavior.
           server: 10.250.1.1
+          # Health-check mode (remote = probe through tunnel/member).
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           detect_mode: remote
+          # Probe interval (ms).
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           interval: 1000
+          # Number of failed probes before member is marked down.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           failtime: 15
+          # Number of successful probes before recovery.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           recoverytime: 10
+          # SD-WAN member IDs evaluated by this check.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           members: [1, 2, 3, 4]
+          # SLA metrics considered for link-cost and service decisions.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           sla_link_cost_factors: [latency, packet-loss]
+          # Latency SLA threshold.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           latency_threshold: 100
+          # Packet loss SLA threshold.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           packetloss_threshold: 10
 
         - name: dc02
@@ -116,12 +174,26 @@ advpn:
 
       services:
         - name: dc01
+          # Name of SLA health-check used by this service rule.
+          # Used by: ADVPN 1.0 and ADVPN 2.0 service steering.
           health_check: dc01
+          # Service selection mode (priority/manual/sla depending on template support).
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           mode: priority
+          # Destination address-group for service match.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           dst: dc01-lan
+          # Source address-group for service match.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           src: rfc1918grp
+          # Metric used for path cost when SLA mode is enabled.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           link_cost_factor: latency
+          # Minimum members that must meet SLA.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           minimum_sla_meet_members: 1
+          # Ordered preference list of SD-WAN members.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           priority_members: [1, 2, 3, 4]
 
         - name: dc02
@@ -141,15 +213,23 @@ advpn:
           priority_members: [1, 2, 5, 6, 8, 7, 4, 3]
 
       inet_service:
+        # Catch-all internet-bound SD-WAN service name.
+        # Used by: ADVPN 1.0 and ADVPN 2.0.
         name: inet
         src: rfc1918grp
         dst: rfc1918grp
+        # Negates destination match to treat non-RFC1918 traffic as internet.
+        # Used by: ADVPN 1.0 and ADVPN 2.0.
         dst_negate: enable
 
     hub:
+      # Optional hub health checks (empty by default).
+      # Used by: ADVPN 1.0 and ADVPN 2.0 when hub SLA probes are required.
       health_checks: []
 
       inet_service:
+        # Hub internet service name.
+        # Used by: ADVPN 1.0 and ADVPN 2.0.
         name: Generic_INET
         src: rfc1918grp
         dst: rfc1918grp
@@ -157,9 +237,15 @@ advpn:
 
       route_services:
         - name: SDWAN_1
+          # Route-tag associated to this SD-WAN route service.
+          # Used by: ADVPN 1.0 and ADVPN 2.0; consumed by policy/routing logic.
           route_tag: 1
           src: rfc1918grp
+          # Route service mode.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           mode: manual
+          # Tie-break behavior for equal candidates.
+          # Used by: ADVPN 1.0 and ADVPN 2.0.
           tie_break: fib-best-match
           priority_members: [1]
 
@@ -185,51 +271,132 @@ advpn:
           priority_members: [4]
 
   bgp:
+    # Local ASN used by all sites in this lab profile.
+    # Used by: ADVPN 1.0 and ADVPN 2.0 (routing plane).
     asn: 65152
+    # BGP peering standard selector:
+    #   loopback    = preferred default (BGP over lo.bgp)
+    #   per_overlay = legacy/compatibility tunnel-interface peering
+    # Used by: BGP on loopback (preferred) and ADVPN 1.0 compatibility mode.
     session_mode: loopback
-    ebgp_multipath: enable
+    # This lab runs a single ASN (iBGP), so keep eBGP multipath disabled by default.
+    # Used by: eBGP-only topologies (typically not needed in this repo's default design).
+    ebgp_multipath: disable
+    # Primary multipath control for this design (single-ASN iBGP over loopback/per-overlay).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback in this repo.
     ibgp_multipath: enable
+    # Enables BGP additional-path capability.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     additional_path: enable
+    # Enables recursive next-hop resolution behavior.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     recursive_next_hop: enable
+    # Route-tag resolve behavior.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     tag_resolve_mode: merge
+    # Enables graceful restart.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     graceful_restart: enable
+    # Number of additional-path entries selected.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     additional_path_select: 4
 
+    # BGP advertisement interval (seconds).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     advertisement_interval: 1
+    # Fast failover on link-down.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     link_down_failover: enable
+    # Stores inbound routes for soft reset.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     soft_reconfiguration: enable
+    # Default remote-as for neighbors.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     remote_as: 65152
+    # BGP keepalive timer (seconds).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     keep_alive_timer: 1
+    # BGP hold timer (seconds).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     holdtime_timer: 3
+    # BGP connect-retry timer (seconds).
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     connect_timer: 1
+    # Additional-path directionality.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     additional_path_mode: both
+    # Max additional-path advertisements from hubs.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     adv_additional_path: 8
+    # Max additional-path advertisements from branches.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     adv_additional_path_branch: 8
+    # Marks hub-side neighbors as RR clients.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     route_reflector_client: enable
+    # IPv6 AF activation.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback when IPv6 is enabled.
     activate6: disable
+    # IPv6 graceful restart capability.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback when IPv6 is enabled.
     capability_graceful_restart6: disable
+    # Recommended for BGP on loopback: set next-hop-self so hubs advertise a reachable loopback NH to spokes.
+    # Used by: ADVPN 1.0 and ADVPN 2.0 (both RR and Dynamic BGP designs).
     next_hop_self: enable
-    next_hop_self_rr: enable
+    # For ADVPN 2.0 / Dynamic BGP, keep disabled so reflected routes preserve the originating spoke loopback NH.
+    # Enable only when intentionally rewriting RR-reflected next-hop values for a legacy/interop design.
+    # Used by: RR-specific behavior in ADVPN 1.0/1.x style route-reflector designs.
+    next_hop_self_rr: disable
+    # IPv6 soft-reconfiguration.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback when IPv6 is enabled.
     soft_reconfiguration6: disable
 
   branch:
     route_maps:
       fail:
         dallas:
+          # Branch failover route-map name for Dallas hub paths.
+          # Used by: ADVPN 1.0 and ADVPN 2.0; applies to BGP policy in both peering modes.
           name: VPN-DALLAS-FAIL
+          # Community tag applied on fail routes.
+          # Used by: ADVPN 1.0 and ADVPN 2.0; applies to BGP policy in both peering modes.
           community: "65152:99"
         chicago:
+          # Branch failover route-map name for Chicago hub paths.
+          # Used by: ADVPN 1.0 and ADVPN 2.0; applies to BGP policy in both peering modes.
           name: VPN-CHICAGO-FAIL
+          # Community tag applied on fail routes.
+          # Used by: ADVPN 1.0 and ADVPN 2.0; applies to BGP policy in both peering modes.
           community: "65152:99"
 
   interhub_ipsec:
+    # Inter-hub IKE version.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     ike_version: 2
+    # Peer type for inter-hub IPsec.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     peertype: any
+    # net-device behavior for inter-hub tunnel.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     net_device: enable
+    # Inter-hub phase1 proposal.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     proposal: "des-md5 des-sha1"
+    # Auto-route behavior for inter-hub phase1.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     add_route: disable
+    # DPD mode for inter-hub tunnel.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     dpd: on-idle
+    # NPU offload setting for inter-hub tunnel.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     npu_offload: disable
+    # DH groups for inter-hub phase1.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     dhgrp: "19 14"
+    # Pre-shared key for inter-hub phase1.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     psksecret: fortinet
+    # DPD retry interval for inter-hub tunnel.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     dpd_retryinterval: 60

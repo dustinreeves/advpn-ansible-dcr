@@ -1,1 +1,3 @@
+# Device role used by templates/playbook branching.
+# Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback/per-overlay logic.
 device_role: branch
