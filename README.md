@@ -1,11 +1,12 @@
 # FortiGate ADVPN (BGP over Loopback Preferred) - Ansible Renderer
-Be advised this is for labbing only, this is mostly chatgpt ai slop, but its pretty good at writing ansible crap. but YMMV.
 
 This repository renders FortiGate CLI configuration snippets for a multi-site ADVPN topology using **Ansible + Jinja2**.
 
+> Scope: lab/reference automation. Validate output in your own environment before production rollout.
+
 The design pattern is:
 - ADVPN overlays over IPsec
-- eBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
+- iBGP peering over tunnel interfaces **or** loopbacks (selectable, with **loopback preferred**)
 - SD-WAN policy steering
 - Hub/branch role-specific templates
 
@@ -62,12 +63,11 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
   - System baseline (hostname, admin timeout/password, RFC1918 objects, static blackhole routes).
 - `interfaces.j2`
   - LAN/WAN interface config, loopbacks (`lo.hc` and `lo.bgp`), and DHCP server block (when LAN DHCP range is set).
-- `hub_phase1.j2` / `branch_phase1.j2`
-  - IPsec phase1-interface for ADVPN overlays.
-- `hub_phase2.j2` / `branch_phase2.j2`
-  - IPsec phase2 selectors for each overlay.
-- `hub_tunnel_allowaccess.j2` / `branch_tunnel_allowaccess.j2`
-  - Tunnel interface allowaccess behavior.
+- `advpn.j2`
+  - Consolidated ADVPN template (hub + branch) used to render:
+    - IPsec phase1-interface overlays
+    - tunnel allowaccess/interface behavior
+    - IPsec phase2 selectors
 - `sdwan_hub.j2` / `sdwan_branch.j2`
   - SD-WAN zones/members/health-checks/services and firewall policies tied to SD-WAN traffic flows.
   - Includes loopback-mode control-plane policies for both `lo.hc` and `lo.bgp` (`vpnsdwan -> loopback`) so BGP-over-loopback sessions are permitted.
@@ -89,7 +89,12 @@ The output is rendered locally (via `delegate_to: localhost`), so this repo can 
 ### Utility scripts
 
 - `scripts/host_vars_wizard.py`
-  - Interactive/non-interactive helper to create new `host_vars/<site>.yml` from an existing template.
+  - Interactive/non-interactive helper to create a new `host_vars/<site>.yml` from an existing template.
+- `scripts/add_spoke_wizard.py`
+  - One-shot spoke onboarding helper that can:
+    - generate `host_vars/<spoke>.yml` from a template
+    - add the spoke to `inventory.yml` under `branch_devices`
+    - insert a new `advpn.site_identifiers.<spoke>` entry in `group_vars/all.yml`
 
 ---
 
@@ -189,6 +194,33 @@ Behavior:
 - Prompts for every key path.
 - Enter keeps default values.
 - Writes `host_vars/<output>.yml`.
+
+---
+
+
+### Recommended next step as the repo grows: automate spoke onboarding
+
+Yes—at this size, automating spoke onboarding is worth it.
+
+Use the new helper to reduce missed steps when adding a branch:
+
+```bash
+python3 scripts/add_spoke_wizard.py \
+  --name miami \
+  --ansible-host 192.168.122.25 \
+  --site-id 15 \
+  --template phoenix \
+  --site-name "miami, fl" \
+  --lo-bgp-ip 10.250.0.15 \
+  --lo-hc-ip 10.250.1.15
+```
+
+This command updates three places in one run:
+1. `host_vars/miami.yml`
+2. `inventory.yml` (`all.children.branch_devices.hosts.miami`)
+3. `group_vars/all.yml` (`advpn.site_identifiers.miami`)
+
+Tip: keep using `host_vars_wizard.py` when you want to answer every field interactively. Use `add_spoke_wizard.py` when you want faster, safer bulk onboarding.
 
 ---
 

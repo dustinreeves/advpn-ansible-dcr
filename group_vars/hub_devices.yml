@@ -1,6 +1,13 @@
+# Device role used by templates/playbook branching.
+# Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback/per-overlay logic.
 device_role: hub
+
+# Hub override for net_device in specific template contexts.
+# Used by: ADVPN 1.0 and ADVPN 2.0 tunnel interface behavior.
 net_device: disable
 
+# Community-list definitions used by hub route-map/BGP policy.
+# Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback/per-overlay logic.
 hub_community_lists:
   dallas:
     - name: HUB-1
