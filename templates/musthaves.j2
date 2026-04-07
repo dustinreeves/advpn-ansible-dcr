@@ -1,6 +1,9 @@
 config system global
+    set admintimeout 480
+    set alias "{{ site_slug | default(normalized_hostname) }}"
+    set gui-theme dark-matter
     set hostname "{{ fgt_hostname | default(normalized_hostname) }}"
-    set admintimeout 0
+    set timezone 08
 end
 
 config router static

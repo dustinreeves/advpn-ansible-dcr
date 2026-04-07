@@ -26,21 +26,6 @@ def dump_yaml(path: Path, data) -> None:
         yaml.safe_dump(data, fh, default_flow_style=False, sort_keys=False)
 
 
-def infer_next_branch_hostname(host_vars_dir: Path) -> str:
-    pattern = re.compile(r"^Branch(\d+)$")
-    highest = 0
-    for file_path in host_vars_dir.glob("*.yml"):
-        try:
-            data = load_yaml(file_path)
-        except Exception:
-            continue
-        hostname = str(data.get("fgt_hostname", ""))
-        m = pattern.match(hostname)
-        if m:
-            highest = max(highest, int(m.group(1)))
-    return f"Branch{highest + 1:02d}"
-
-
 def insert_site_identifier(all_yml_path: Path, site_slug: str, site_id: int) -> None:
     lines = all_yml_path.read_text(encoding="utf-8").splitlines()
     start = None
@@ -118,7 +103,7 @@ def main() -> int:
     new_data = deepcopy(template_data)
     new_data["site_slug"] = site_slug
     new_data["site_name"] = args.site_name or site_slug
-    new_data["fgt_hostname"] = args.fgt_hostname or infer_next_branch_hostname(host_vars_dir)
+    new_data["fgt_hostname"] = args.fgt_hostname or site_slug
 
     if args.lo_bgp_ip:
         new_data.setdefault("lo_bgp", {})["ip"] = f"{args.lo_bgp_ip} 255.255.255.255"

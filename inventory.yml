@@ -7,8 +7,8 @@ all:
 
     hubs:
       dallas:
-        wan1_gw: 100.64.0.2
-        wan2_gw: 100.65.0.2
+        wan1_gw: 100.64.0.10
+        wan2_gw: 100.65.0.10
         vpn_ids:
           wan1:
             - 1
@@ -18,8 +18,8 @@ all:
             - 4
 
       chicago:
-        wan1_gw: 100.64.0.6
-        wan2_gw: 100.65.0.6
+        wan1_gw: 100.64.0.20
+        wan2_gw: 100.65.0.20
         vpn_ids:
           wan1:
             - 5
