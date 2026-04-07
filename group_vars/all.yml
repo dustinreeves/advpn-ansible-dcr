@@ -351,6 +351,11 @@ advpn:
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback when IPv6 is enabled.
     soft_reconfiguration6: disable
 
+    # Netmask used when deriving the advertised/blackhole subnet for the BGP loopback interface.
+    # Used by: BGP on loopback and baseline static blackhole route generation.
+    loopback_network_mask: 255.255.255.0
+
+
   branch:
     route_maps:
       fail:

@@ -75,7 +75,7 @@ config router bgp
         next
 {% if lo_bgp is defined and lo_bgp.ip is defined %}
         edit 2
-            set prefix {{ lo_bgp.ip }}
+            set prefix {{ lo_bgp.network | default(lo_bgp.ip.split()[0].rsplit('.', 1)[0] ~ '.0 ' ~ bgp.loopback_network_mask) }}
         next
 {% endif %}
     end
