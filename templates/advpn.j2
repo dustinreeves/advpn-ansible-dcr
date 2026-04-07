@@ -8,12 +8,11 @@ config vpn ipsec phase1-interface
         set interface "{{ wan[t.underlay_wan].interface }}"
         set ike-version {{ ike_version }}
         set peertype any
+        set net-device enable
 {% if bgp.session_mode == "loopback" %}
-        set net-device disable
         set exchange-interface-ip enable
         set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
 {% else %}
-        set net-device {{ net_device }}
         set mode-cfg {{ mode_cfg }}
 {% endif %}
         set proposal {{ proposal }}
@@ -41,11 +40,7 @@ config vpn ipsec phase1-interface
         set interface "{{ wan[t.branch_wan].interface }}"
         set ike-version {{ ike_version }}
         set peertype any
-{% if bgp.session_mode == "loopback" %}
         set net-device disable
-{% else %}
-        set net-device {{ net_device }}
-{% endif %}
 {% if bgp.session_mode == "loopback" %}
         set exchange-interface-ip enable
         set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
