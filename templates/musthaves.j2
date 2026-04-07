@@ -35,6 +35,13 @@ config router static
         set vrf 0
         set blackhole enable
     next
+    edit 781
+        set dst {{ lo_bgp.network | default(lo_bgp.ip.split()[0].rsplit('.', 1)[0] ~ '.0 ' ~ bgp.loopback_network_mask) }}
+        set comment "[Created by ansible template blackhole bgp loopback subnet]"
+        set distance 254
+        set vrf 0
+        set blackhole enable
+    next
 end
 
 config firewall address
