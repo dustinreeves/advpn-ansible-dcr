@@ -20,8 +20,10 @@ lo_bgp:
 wan:
   wan1:
     interface: port1
+    ip: 100.64.0.20 255.255.255.0
   wan2:
     interface: port2
+    ip: 100.65.0.20 255.255.255.0
 
 hub_overlay_interfaces:
   - name: hub2-wan1-vpn5
@@ -54,6 +56,6 @@ interhub:
   policy_name: chicago-dallas-link
   parent_interface: port10
   localid: chicago
-  remote_gw: 100.64.0.2
+  remote_gw: 100.64.0.10
   tunnel_ip: 10.254.254.2 255.255.255.255
   remote_tunnel_ip: 10.254.254.1 255.255.255.255

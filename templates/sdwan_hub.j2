@@ -26,10 +26,12 @@ config system sdwan
         edit {{ hub_overlay_interfaces | map(attribute='member_id') | max + 1 }}
             set interface "{{ wan.wan2.interface }}"
             set zone "inet"
+            set gateway 100.65.0.1
         next
         edit {{ hub_overlay_interfaces | map(attribute='member_id') | max + 2 }}
             set interface "{{ wan.wan1.interface }}"
             set zone "inet"
+            set gateway 100.64.0.1
         next
     end
 
