@@ -10,6 +10,12 @@ advpn:
     tampa: 14
 
   phase1:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 (legacy/per-overlay): mode_cfg=enable, branch_net_device=enable,
+    #   exchange_interface_ip=disable, network_overlay=disable, auto_discovery_shortcuts=dependent.
+    # - ADVPN 2.0 (dynamic BGP/loopback preferred): mode_cfg=disable, branch_net_device=disable,
+    #   exchange_interface_ip=enable, network_overlay=enable, auto_discovery_shortcuts=dependent.
+    # - Both: keep dpd on-idle, keep npu_offload disable unless hardware/offload validation says otherwise.
     # Phase1 interface type used for hub-side dynamic overlays.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     hub_phase1_type: dynamic
@@ -72,6 +78,9 @@ advpn:
     tunnel_allowaccess: ping
 
   phase2:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 and ADVPN 2.0: keep route-based any/any selectors (src_subnet/dst_subnet = 0.0.0.0/0)
+    #   and consistent proposal/dhgrp across all peers to prevent negotiation mismatches.
     # Encryption/auth proposal for phase2 selectors.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
@@ -295,6 +304,10 @@ advpn:
           priority_members: [4]
 
   bgp:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 (legacy): session_mode=per_overlay is common; loopback is valid if standardized end-to-end.
+    # - ADVPN 2.0 (recommended): session_mode=loopback with next_hop_self=enable and next_hop_self_rr=disable.
+    # - Both: keep timers/remote_as consistent across hubs/branches and only enable IPv6 knobs when IPv6 AF is used.
     # Local ASN used by all sites in this lab profile.
     # Used by: ADVPN 1.0 and ADVPN 2.0 (routing plane).
     asn: 65152
@@ -387,6 +400,9 @@ advpn:
           community: "65152:99"
 
   interhub_ipsec:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 and ADVPN 2.0: keep inter-hub tunnel always on with stable proposal/dhgrp/psk and dpd on-idle.
+    # - net_device=enable is generally preferred for consistent route-based tunnel behavior between hubs.
     # Inter-hub IKE version.
     # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     ike_version: 2
