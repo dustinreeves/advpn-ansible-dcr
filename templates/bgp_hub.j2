@@ -10,11 +10,17 @@ config router bgp
 {% if bgp.session_mode == "loopback" %}
         edit "BRANCH-LOOPBACK"
             set advertisement-interval {{ bgp.advertisement_interval }}
-            set capability-graceful-restart enable
+{% if bgp.capability_graceful_restart == "enable" %}
+            set capability-graceful-restart {{ bgp.capability_graceful_restart }}
+{% endif %}
             set next-hop-self {{ bgp.next_hop_self }}
             set next-hop-self-rr {{ bgp.next_hop_self_rr }}
-            set soft-reconfiguration enable
-            set ebgp-enforce-multihop enable
+{% if bgp.soft_reconfiguration == "enable" %}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+{% endif %}
+{% if bgp.ebgp_enforce_multihop == "enable" %}
+            set ebgp-enforce-multihop {{ bgp.ebgp_enforce_multihop }}
+{% endif %}
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
@@ -27,11 +33,17 @@ config router bgp
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
         edit "VPN{{ t.network_id }}"
             set advertisement-interval {{ bgp.advertisement_interval }}
-            set capability-graceful-restart enable
+{% if bgp.capability_graceful_restart == "enable" %}
+            set capability-graceful-restart {{ bgp.capability_graceful_restart }}
+{% endif %}
             set next-hop-self {{ bgp.next_hop_self }}
             set next-hop-self-rr {{ bgp.next_hop_self_rr }}
-            set soft-reconfiguration enable
-            set ebgp-enforce-multihop enable
+{% if bgp.soft_reconfiguration == "enable" %}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+{% endif %}
+{% if bgp.ebgp_enforce_multihop == "enable" %}
+            set ebgp-enforce-multihop {{ bgp.ebgp_enforce_multihop }}
+{% endif %}
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
