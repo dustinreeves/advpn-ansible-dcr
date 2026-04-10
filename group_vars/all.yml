@@ -285,9 +285,6 @@ advpn:
     # Primary multipath control for this design (single-ASN iBGP over loopback/per-overlay).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback in this repo.
     ibgp_multipath: enable
-    # Enables BGP additional-path capability.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path: enable
     # Enables recursive next-hop resolution behavior.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     recursive_next_hop: enable
@@ -297,19 +294,19 @@ advpn:
     # Enables graceful restart.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     graceful_restart: enable
-    # Number of additional-path entries selected.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path_select: 4
 
     # BGP advertisement interval (seconds).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     advertisement_interval: 1
-    # Fast failover on link-down.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    link_down_failover: enable
     # Stores inbound routes for soft reset.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     soft_reconfiguration: enable
+    # Enables neighbor graceful-restart capability.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
+    capability_graceful_restart: enable
+    # Enables EBGP multihop enforcement behavior on neighbors.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
+    ebgp_enforce_multihop: enable
     # Default remote-as for neighbors.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     remote_as: 65152
@@ -322,15 +319,6 @@ advpn:
     # BGP connect-retry timer (seconds).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     connect_timer: 1
-    # Additional-path directionality.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path_mode: both
-    # Max additional-path advertisements from hubs.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    adv_additional_path: 8
-    # Max additional-path advertisements from branches.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    adv_additional_path_branch: 8
     # Marks hub-side neighbors as RR clients.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     route_reflector_client: enable
