@@ -3,11 +3,33 @@ config router bgp
     set router-id {{ lo_bgp.ip.split()[0] }}
     set ebgp-multipath {{ bgp.ebgp_multipath }}
     set ibgp-multipath {{ bgp.ibgp_multipath }}
-    set additional-path {{ bgp.additional_path }}
     set graceful-restart {{ bgp.graceful_restart }}
-    set additional-path-select {{ bgp.additional_path_select }}
     set recursive-next-hop {{ bgp.recursive_next_hop }}
     set tag-resolve-mode {{ bgp.tag_resolve_mode }}
+
+{% if bgp.session_mode == "loopback" %}
+    config neighbor-group
+        edit "loopback-bgp"
+            set advertisement-interval {{ bgp.advertisement_interval }}
+            set capability-graceful-restart enable
+            set next-hop-self {{ bgp.next_hop_self }}
+            set soft-reconfiguration enable
+            set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
+            set ebgp-enforce-multihop enable
+            set update-source "{{ lo_bgp.interface }}"
+            set remote-as {{ bgp.remote_as }}
+            set keep-alive-timer {{ bgp.keep_alive_timer }}
+            set holdtime-timer {{ bgp.holdtime_timer }}
+        next
+    end
+
+    config neighbor-range
+        edit 1
+            set prefix 10.250.0.0 255.255.255.0
+            set neighbor-group "loopback-bgp"
+        next
+    end
+{% endif %}
 
     config neighbor
 {% if bgp.session_mode == "loopback" %}
@@ -17,17 +39,14 @@ config router bgp
             set advertisement-interval {{ bgp.advertisement_interval }}
             set activate6 {{ bgp.activate6 }}
             set capability-graceful-restart6 {{ bgp.capability_graceful_restart6 }}
-            set link-down-failover {{ bgp.link_down_failover }}
             set next-hop-self {{ bgp.next_hop_self }}
-            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set soft-reconfiguration enable
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
             set ebgp-enforce-multihop enable
             set update-source "{{ lo_bgp.interface }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
-            set additional-path {{ bgp.additional_path_mode }}
-            set adv-additional-path {{ bgp.adv_additional_path_branch }}
             set route-map-out "{{ branch_bgp_route_maps[hub_name] }}"
         next
 {% endfor %}
@@ -38,16 +57,14 @@ config router bgp
             set advertisement-interval {{ bgp.advertisement_interval }}
             set activate6 {{ bgp.activate6 }}
             set capability-graceful-restart6 {{ bgp.capability_graceful_restart6 }}
-            set link-down-failover {{ bgp.link_down_failover }}
             set next-hop-self {{ bgp.next_hop_self }}
-            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set soft-reconfiguration enable
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
+            set ebgp-enforce-multihop enable
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
-            set additional-path {{ bgp.additional_path_mode }}
-            set adv-additional-path {{ bgp.adv_additional_path_branch }}
             set route-map-out "{{ t.name }}"
         next
 {% endfor %}
