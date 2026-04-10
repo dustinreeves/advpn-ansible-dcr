@@ -10,9 +10,15 @@ advpn:
     tampa: 14
 
   phase1:
+    # Phase1 interface type used for hub-side dynamic overlays.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    hub_phase1_type: dynamic
     # IKE version for all overlay phase1-interface tunnels.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     ike_version: 2
+    # Peer type applied to overlay phase1 neighbors.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    peertype: any
     # Encryption/auth proposal for phase1.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
@@ -25,27 +31,45 @@ advpn:
     # Enables net-device behavior on tunnel interfaces.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     net_device: enable
+    # Branch-specific net-device behavior on overlay phase1.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    branch_net_device: disable
     # Enables/disables mode-cfg.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     mode_cfg: disable
     # Controls automatic static route creation by IPsec phase1.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     add_route: disable
+    # Controls exchange-interface-ip behavior in loopback BGP mode.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    exchange_interface_ip: enable
     # Dead Peer Detection behavior.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd: on-idle
     # DPD retry interval (seconds).
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd_retryinterval: 5
+    # Controls NPU offload on overlay phase1 tunnels.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    npu_offload: disable
     # Enables shortcut receiver role on hub side.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     auto_discovery_receiver: enable
+    # Enables shortcut sender role on hub side.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    auto_discovery_sender: enable
+    # Enables shortcut forwarder role on hub side.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    auto_discovery_forwarder: enable
     # Controls ADVPN shortcut behavior.
     # Used by: ADVPN 1.0 and ADVPN 2.0 (core ADVPN behavior).
     auto_discovery_shortcuts: dependent
     # Enables network overlay capability for ADVPN 2.0 style overlays.
     # Used by: ADVPN 2.0 primarily (kept compatible with ADVPN 1.0 deployments).
     network_overlay: enable
+    # Tunnel interface allowaccess setting for ADVPN overlays.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    tunnel_allowaccess: ping
 
   phase2:
     # Encryption/auth proposal for phase2 selectors.
@@ -393,3 +417,6 @@ advpn:
     # DPD retry interval for inter-hub tunnel.
     # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     dpd_retryinterval: 60
+    # Inter-hub tunnel interface allowaccess setting.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
+    allowaccess: ping

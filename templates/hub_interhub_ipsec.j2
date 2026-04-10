@@ -3,7 +3,9 @@ config vpn ipsec phase1-interface
         set interface "{{ interhub.parent_interface }}"
         set ike-version {{ interhub_ipsec.ike_version }}
         set peertype {{ interhub_ipsec.peertype }}
-        set net-device enable
+{% if interhub_ipsec.net_device == "enable" %}
+        set net-device {{ interhub_ipsec.net_device }}
+{% endif %}
         set proposal {{ interhub_ipsec.proposal }}
         set add-route {{ interhub_ipsec.add_route }}
         set localid "{{ interhub.localid }}"
@@ -19,7 +21,7 @@ end
 config system interface
     edit "{{ interhub.tunnel_name }}"
         set ip {{ interhub.tunnel_ip }}
-        set allowaccess ping
+        set allowaccess {{ interhub_ipsec.allowaccess }}
         set type tunnel
         set interface "{{ interhub.parent_interface }}"
     next

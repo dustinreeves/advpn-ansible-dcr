@@ -4,14 +4,18 @@ config vpn ipsec phase1-interface
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
 {% set overlay_network = t.overlay_subnet.split(' ')[0].split('.') %}
     edit "{{ t.name }}"
-        set type dynamic
+        set type {{ hub_phase1_type }}
         set interface "{{ wan[t.underlay_wan].interface }}"
         set ike-version {{ ike_version }}
-        set peertype any
-        set net-device enable
+        set peertype {{ peertype }}
+{% if net_device == "enable" %}
+        set net-device {{ net_device }}
+{% endif %}
 {% if bgp.session_mode == "loopback" %}
-        set exchange-interface-ip enable
+{% if exchange_interface_ip == "enable" %}
+        set exchange-interface-ip {{ exchange_interface_ip }}
         set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% endif %}
 {% else %}
         set mode-cfg {{ mode_cfg }}
 {% endif %}
@@ -19,10 +23,14 @@ config vpn ipsec phase1-interface
         set add-route {{ add_route }}
         set localid "{{ fgt_hostname }}"
         set dpd {{ dpd }}
-        set npu-offload disable
+        set npu-offload {{ npu_offload }}
         set dhgrp {{ dhgrp }}
-        set auto-discovery-sender enable
-        set auto-discovery-forwarder enable
+{% if auto_discovery_sender == "enable" %}
+        set auto-discovery-sender {{ auto_discovery_sender }}
+{% endif %}
+{% if auto_discovery_forwarder == "enable" %}
+        set auto-discovery-forwarder {{ auto_discovery_forwarder }}
+{% endif %}
         set network-overlay {{ network_overlay }}
         set network-id {{ t.network_id }}
 {% if bgp.session_mode != "loopback" %}
@@ -39,11 +47,15 @@ config vpn ipsec phase1-interface
     edit "{{ t.name }}"
         set interface "{{ wan[t.branch_wan].interface }}"
         set ike-version {{ ike_version }}
-        set peertype any
-        set net-device disable
+        set peertype {{ peertype }}
+{% if branch_net_device == "enable" %}
+        set net-device {{ branch_net_device }}
+{% endif %}
 {% if bgp.session_mode == "loopback" %}
-        set exchange-interface-ip enable
+{% if exchange_interface_ip == "enable" %}
+        set exchange-interface-ip {{ exchange_interface_ip }}
         set exchange-ip-addr4 {{ lo_bgp.ip.split()[0] }}
+{% endif %}
 {% else %}
         set mode-cfg {{ mode_cfg }}
 {% endif %}
@@ -74,7 +86,7 @@ config system interface
 {% if bgp.session_mode != "loopback" %}
         set ip {{ overlay_prefix }}.1 255.255.255.255
 {% endif %}
-        set allowaccess ping
+        set allowaccess {{ tunnel_allowaccess }}
         set type tunnel
 {% if bgp.session_mode != "loopback" %}
         set remote-ip {{ overlay_prefix }}.254 255.255.255.0
@@ -85,7 +97,7 @@ config system interface
 {% else %}
 {% for t in tunnel_matrix %}
     edit "{{ t.name }}"
-        set allowaccess ping
+        set allowaccess {{ tunnel_allowaccess }}
     next
 {% endfor %}
 {% endif %}
