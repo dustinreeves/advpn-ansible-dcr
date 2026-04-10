@@ -10,9 +10,21 @@ advpn:
     tampa: 14
 
   phase1:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 (legacy/per-overlay): mode_cfg=enable, branch_net_device=enable,
+    #   exchange_interface_ip=disable, network_overlay=disable, auto_discovery_shortcuts=dependent.
+    # - ADVPN 2.0 (dynamic BGP/loopback preferred): mode_cfg=disable, branch_net_device=disable,
+    #   exchange_interface_ip=enable, network_overlay=enable, auto_discovery_shortcuts=dependent.
+    # - Both: keep dpd on-idle, keep npu_offload disable unless hardware/offload validation says otherwise.
+    # Phase1 interface type used for hub-side dynamic overlays.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    hub_phase1_type: dynamic
     # IKE version for all overlay phase1-interface tunnels.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     ike_version: 2
+    # Peer type applied to overlay phase1 neighbors.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    peertype: any
     # Encryption/auth proposal for phase1.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
@@ -25,29 +37,50 @@ advpn:
     # Enables net-device behavior on tunnel interfaces.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     net_device: enable
+    # Branch-specific net-device behavior on overlay phase1.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    branch_net_device: disable
     # Enables/disables mode-cfg.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     mode_cfg: disable
     # Controls automatic static route creation by IPsec phase1.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     add_route: disable
+    # Controls exchange-interface-ip behavior in loopback BGP mode.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    exchange_interface_ip: enable
     # Dead Peer Detection behavior.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd: on-idle
     # DPD retry interval (seconds).
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     dpd_retryinterval: 5
+    # Controls NPU offload on overlay phase1 tunnels.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    npu_offload: disable
     # Enables shortcut receiver role on hub side.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     auto_discovery_receiver: enable
+    # Enables shortcut sender role on hub side.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    auto_discovery_sender: enable
+    # Enables shortcut forwarder role on hub side.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    auto_discovery_forwarder: enable
     # Controls ADVPN shortcut behavior.
     # Used by: ADVPN 1.0 and ADVPN 2.0 (core ADVPN behavior).
     auto_discovery_shortcuts: dependent
     # Enables network overlay capability for ADVPN 2.0 style overlays.
     # Used by: ADVPN 2.0 primarily (kept compatible with ADVPN 1.0 deployments).
     network_overlay: enable
+    # Tunnel interface allowaccess setting for ADVPN overlays.
+    # Used by: ADVPN 1.0 and ADVPN 2.0.
+    tunnel_allowaccess: ping
 
   phase2:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 and ADVPN 2.0: keep route-based any/any selectors (src_subnet/dst_subnet = 0.0.0.0/0)
+    #   and consistent proposal/dhgrp across all peers to prevent negotiation mismatches.
     # Encryption/auth proposal for phase2 selectors.
     # Used by: ADVPN 1.0 and ADVPN 2.0.
     proposal: "des-md5 des-sha1"
@@ -271,6 +304,10 @@ advpn:
           priority_members: [4]
 
   bgp:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 (legacy): session_mode=per_overlay is common; loopback is valid if standardized end-to-end.
+    # - ADVPN 2.0 (recommended): session_mode=loopback with next_hop_self=enable and next_hop_self_rr=disable.
+    # - Both: keep timers/remote_as consistent across hubs/branches and only enable IPv6 knobs when IPv6 AF is used.
     # Local ASN used by all sites in this lab profile.
     # Used by: ADVPN 1.0 and ADVPN 2.0 (routing plane).
     asn: 65152
@@ -285,9 +322,6 @@ advpn:
     # Primary multipath control for this design (single-ASN iBGP over loopback/per-overlay).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback in this repo.
     ibgp_multipath: enable
-    # Enables BGP additional-path capability.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path: enable
     # Enables recursive next-hop resolution behavior.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     recursive_next_hop: enable
@@ -297,19 +331,19 @@ advpn:
     # Enables graceful restart.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     graceful_restart: enable
-    # Number of additional-path entries selected.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path_select: 4
 
     # BGP advertisement interval (seconds).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     advertisement_interval: 1
-    # Fast failover on link-down.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    link_down_failover: enable
     # Stores inbound routes for soft reset.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     soft_reconfiguration: enable
+    # Enables neighbor graceful-restart capability.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
+    capability_graceful_restart: enable
+    # Enables EBGP multihop enforcement behavior on neighbors.
+    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
+    ebgp_enforce_multihop: enable
     # Default remote-as for neighbors.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     remote_as: 65152
@@ -322,15 +356,6 @@ advpn:
     # BGP connect-retry timer (seconds).
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     connect_timer: 1
-    # Additional-path directionality.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    additional_path_mode: both
-    # Max additional-path advertisements from hubs.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    adv_additional_path: 8
-    # Max additional-path advertisements from branches.
-    # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
-    adv_additional_path_branch: 8
     # Marks hub-side neighbors as RR clients.
     # Used by: ADVPN 1.0, ADVPN 2.0, and BGP on loopback.
     route_reflector_client: enable
@@ -375,6 +400,9 @@ advpn:
           community: "65152:99"
 
   interhub_ipsec:
+    # Deployment guidance (recommended baseline):
+    # - ADVPN 1.0 and ADVPN 2.0: keep inter-hub tunnel always on with stable proposal/dhgrp/psk and dpd on-idle.
+    # - net_device=enable is generally preferred for consistent route-based tunnel behavior between hubs.
     # Inter-hub IKE version.
     # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     ike_version: 2
@@ -405,3 +433,6 @@ advpn:
     # DPD retry interval for inter-hub tunnel.
     # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
     dpd_retryinterval: 60
+    # Inter-hub tunnel interface allowaccess setting.
+    # Used by: hub-to-hub IPsec under ADVPN 1.0 and ADVPN 2.0 topologies.
+    allowaccess: ping

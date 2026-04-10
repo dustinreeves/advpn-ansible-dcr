@@ -11,11 +11,17 @@ config router bgp
     config neighbor-group
         edit "loopback-bgp"
             set advertisement-interval {{ bgp.advertisement_interval }}
-            set capability-graceful-restart enable
+{% if bgp.capability_graceful_restart == "enable" %}
+            set capability-graceful-restart {{ bgp.capability_graceful_restart }}
+{% endif %}
             set next-hop-self {{ bgp.next_hop_self }}
-            set soft-reconfiguration enable
+{% if bgp.soft_reconfiguration == "enable" %}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+{% endif %}
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
-            set ebgp-enforce-multihop enable
+{% if bgp.ebgp_enforce_multihop == "enable" %}
+            set ebgp-enforce-multihop {{ bgp.ebgp_enforce_multihop }}
+{% endif %}
             set update-source "{{ lo_bgp.interface }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
@@ -40,9 +46,13 @@ config router bgp
             set activate6 {{ bgp.activate6 }}
             set capability-graceful-restart6 {{ bgp.capability_graceful_restart6 }}
             set next-hop-self {{ bgp.next_hop_self }}
-            set soft-reconfiguration enable
+{% if bgp.soft_reconfiguration == "enable" %}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+{% endif %}
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
-            set ebgp-enforce-multihop enable
+{% if bgp.ebgp_enforce_multihop == "enable" %}
+            set ebgp-enforce-multihop {{ bgp.ebgp_enforce_multihop }}
+{% endif %}
             set update-source "{{ lo_bgp.interface }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
@@ -58,9 +68,13 @@ config router bgp
             set activate6 {{ bgp.activate6 }}
             set capability-graceful-restart6 {{ bgp.capability_graceful_restart6 }}
             set next-hop-self {{ bgp.next_hop_self }}
-            set soft-reconfiguration enable
+{% if bgp.soft_reconfiguration == "enable" %}
+            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+{% endif %}
             set soft-reconfiguration6 {{ bgp.soft_reconfiguration6 }}
-            set ebgp-enforce-multihop enable
+{% if bgp.ebgp_enforce_multihop == "enable" %}
+            set ebgp-enforce-multihop {{ bgp.ebgp_enforce_multihop }}
+{% endif %}
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
