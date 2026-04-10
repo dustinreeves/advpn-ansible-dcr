@@ -3,27 +3,23 @@ config router bgp
     set router-id {{ lo_bgp.ip.split()[0] }}
     set ebgp-multipath {{ bgp.ebgp_multipath }}
     set ibgp-multipath {{ bgp.ibgp_multipath }}
-    set additional-path {{ bgp.additional_path }}
     set recursive-next-hop {{ bgp.recursive_next_hop }}
-    set tag-resolve-mode {{ bgp.tag_resolve_mode }}
     set graceful-restart {{ bgp.graceful_restart }}
-    set additional-path-select {{ bgp.additional_path_select }}
 
     config neighbor-group
 {% if bgp.session_mode == "loopback" %}
         edit "BRANCH-LOOPBACK"
             set advertisement-interval {{ bgp.advertisement_interval }}
-            set link-down-failover {{ bgp.link_down_failover }}
+            set capability-graceful-restart enable
             set next-hop-self {{ bgp.next_hop_self }}
             set next-hop-self-rr {{ bgp.next_hop_self_rr }}
-            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set soft-reconfiguration enable
+            set ebgp-enforce-multihop enable
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
             set connect-timer {{ bgp.connect_timer }}
             set update-source "{{ lo_bgp.interface }}"
-            set additional-path {{ bgp.additional_path_mode }}
-            set adv-additional-path {{ bgp.adv_additional_path }}
             set route-reflector-client {{ bgp.route_reflector_client }}
             set route-map-in "RM-HUB-FAIL"
         next
@@ -31,18 +27,17 @@ config router bgp
 {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}
         edit "VPN{{ t.network_id }}"
             set advertisement-interval {{ bgp.advertisement_interval }}
-            set link-down-failover {{ bgp.link_down_failover }}
+            set capability-graceful-restart enable
             set next-hop-self {{ bgp.next_hop_self }}
             set next-hop-self-rr {{ bgp.next_hop_self_rr }}
-            set soft-reconfiguration {{ bgp.soft_reconfiguration }}
+            set soft-reconfiguration enable
+            set ebgp-enforce-multihop enable
             set interface "{{ t.name }}"
             set remote-as {{ bgp.remote_as }}
             set keep-alive-timer {{ bgp.keep_alive_timer }}
             set holdtime-timer {{ bgp.holdtime_timer }}
             set connect-timer {{ bgp.connect_timer }}
             set update-source "{{ t.name }}"
-            set additional-path {{ bgp.additional_path_mode }}
-            set adv-additional-path {{ bgp.adv_additional_path }}
             set route-reflector-client {{ bgp.route_reflector_client }}
             set route-map-in "RM-HUB-{{ t.network_id }}"
         next
