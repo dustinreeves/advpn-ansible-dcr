@@ -2,6 +2,9 @@ config system zone
     edit "Data"
         set interface "{{ lan.interface }}"
     next
+    edit "VPN_OVERLAYS"
+        set interface {% for t in hub_overlay_interfaces | sort(attribute='network_id') %}"{{ t.name }}"{% if not loop.last %} {% endif %}{% endfor %}
+    next
 end
 
 config system sdwan
@@ -12,17 +15,9 @@ config system sdwan
         next
         edit "inet"
         next
-        edit "vpnsdwan"
-        next
     end
 
     config members
-{% for t in hub_overlay_interfaces %}
-        edit {{ t.member_id }}
-            set interface "{{ t.name }}"
-            set zone "vpnsdwan"
-        next
-{% endfor %}
         edit {{ hub_overlay_interfaces | map(attribute='member_id') | max + 1 }}
             set interface "{{ wan.wan2.interface }}"
             set zone "inet"
@@ -84,8 +79,8 @@ end
 config firewall policy
     edit 0
         set name "allow-all-trusted"
-        set srcintf "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "vpnsdwan" "Data"
-        set dstintf "vpnsdwan" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "Data"
+        set srcintf "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "VPN_OVERLAYS" "Data"
+        set dstintf "VPN_OVERLAYS" "{{ lo_bgp.interface }}" "{{ lo_hc.interface }}" "Data"
         set action accept
         set srcaddr "all"
         set dstaddr "all"
