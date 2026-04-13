@@ -26,25 +26,25 @@ wan:
     ip: 100.65.0.10 255.255.255.0
 
 hub_overlay_interfaces:
-  - name: hub1-wan1-vpn1
+  - name: w1vpn1
     member_id: 1
     underlay_wan: wan1
     network_id: 1
     overlay_subnet: 10.250.1.0 255.255.255.0
 
-  - name: hub1-wan2-vpn2
+  - name: w2vpn2
     member_id: 3
     underlay_wan: wan2
     network_id: 2
     overlay_subnet: 10.250.2.0 255.255.255.0
 
-  - name: hub1-wan1-vpn3
+  - name: w1vpn3
     member_id: 2
     underlay_wan: wan1
     network_id: 3
     overlay_subnet: 10.250.3.0 255.255.255.0
 
-  - name: hub1-wan2-vpn4
+  - name: w2vpn4
     member_id: 4
     underlay_wan: wan2
     network_id: 4

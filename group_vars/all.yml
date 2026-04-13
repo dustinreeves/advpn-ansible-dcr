@@ -103,49 +103,49 @@ advpn:
   # Overlay tunnel matrix (branch WAN -> hub WAN + network-id mapping).
   # Used by: ADVPN 1.0 and ADVPN 2.0. BGP (both overlay and loopback modes) references this for policy mapping.
   tunnels:
-    - name: wan1-vpn1
+    - name: w1vpn1
       branch_wan: wan1
       hub: dallas
       hub_wan: wan1
       network_id: 1
 
-    - name: wan1-vpn2
+    - name: w1vpn2
       branch_wan: wan1
       hub: dallas
       hub_wan: wan2
       network_id: 2
 
-    - name: wan2-vpn3
+    - name: w2vpn3
       branch_wan: wan2
       hub: dallas
       hub_wan: wan1
       network_id: 3
 
-    - name: wan2-vpn4
+    - name: w2vpn4
       branch_wan: wan2
       hub: dallas
       hub_wan: wan2
       network_id: 4
 
-    - name: wan1-vpn5
+    - name: w1vpn5
       branch_wan: wan1
       hub: chicago
       hub_wan: wan1
       network_id: 5
 
-    - name: wan1-vpn6
+    - name: w1vpn6
       branch_wan: wan1
       hub: chicago
       hub_wan: wan2
       network_id: 6
 
-    - name: wan2-vpn7
+    - name: w2vpn7
       branch_wan: wan2
       hub: chicago
       hub_wan: wan1
       network_id: 7
 
-    - name: wan2-vpn8
+    - name: w2vpn8
       branch_wan: wan2
       hub: chicago
       hub_wan: wan2
