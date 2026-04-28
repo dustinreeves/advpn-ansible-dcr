@@ -190,3 +190,43 @@ python3 scripts/add_spoke_wizard.py \
 - Hub-only required keys (e.g., `hub_overlay_interfaces`, `interhub`, `hub_community_lists[...]`) are validated before rendering.
 - Branch-only required keys (LAN subnet + DHCP ranges + loopbacks) are validated before rendering.
 - Keep addressing data in `host_vars` authoritative; templates are intentionally thin.
+
+---
+
+## Web front end (dashboard UI + render in browser)
+
+You can launch a local web UI that lets you:
+
+- pick a host
+- edit variables in a **dark-mode dashboard** with section cards, network tabs, and preview panel
+- choose render mode:
+  - **Ansible (exact)**: runs playbook like before
+  - **Browser Jinja (experimental)**: renders templates in-browser using Nunjucks
+- use **Preview Configuration** to generate output and update the right-side preview panel
+
+Run:
+
+```bash
+python3 scripts/web_frontend.py
+```
+
+The server now serves frontend assets from `webui/index.html`, `webui/app.css`, and `webui/app.js`.
+
+Then open:
+
+```text
+http://127.0.0.1:8080
+```
+
+Notes:
+
+- The UI does **not** overwrite files unless you copy/paste changes back yourself.
+- In **Ansible (exact)** mode, it calls `ansible-playbook -i inventory.yml playbook.yml --limit <host>` with temporary extra vars.
+- In **Browser Jinja (experimental)** mode, templates are rendered in the browser (no Ansible run), which is useful for GitHub Pages/static hosting scenarios.
+- Browser mode may not exactly match playbook output if templates rely on facts derived inside Ansible tasks.
+
+## GitHub Pages compatibility
+
+GitHub Pages is static hosting, so it **cannot run Ansible** directly.
+
+You can still publish the front-end on Pages if you pair it with a backend renderer (for example, a GitHub Action, self-hosted API, or serverless function) that executes `ansible-playbook` and returns the output.

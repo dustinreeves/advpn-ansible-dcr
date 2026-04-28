@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ADVPN FortiGate Template Generator</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="theme-dark">
+  <div class="layout">
+    <aside class="sidebar card">
+      <div>
+        <h1>ADVPN</h1>
+        <p>FortiGate Template Generator</p>
+        <nav>
+          <button class="nav-item active">Template Config</button>
+          <button class="nav-item">Preview Config</button>
+          <button class="nav-item">Download Config</button>
+          <button class="nav-item">Saved Templates</button>
+          <button class="nav-item">Settings</button>
+        </nav>
+      </div>
+      <div class="status card">
+        <div>FortiOS: <span id="fortiosVersion">N/A</span></div>
+        <div>Status: <span id="connStatus" class="badge">Ready</span></div>
+        <label class="toggle"><input type="checkbox" id="themeToggle" checked /> Dark mode</label>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="card header">
+        <div>
+          <h2>Template Configuration</h2>
+          <p>Configure all variables for your ADVPN FortiGate template</p>
+        </div>
+        <div class="header-actions">
+          <select id="hostSelect"></select>
+          <select id="renderMode">
+            <option value="ansible">Ansible (exact)</option>
+            <option value="browser">Browser Jinja (experimental)</option>
+          </select>
+          <button id="loadBtn">Load Template</button>
+          <button id="saveBtn">Save Template</button>
+        </div>
+      </header>
+
+      <section id="sections"></section>
+    </main>
+
+    <aside class="preview card">
+      <h3>Configuration Summary</h3>
+      <div class="tabs">
+        <button class="tab active" data-view="json">JSON View</button>
+        <button class="tab" data-view="cli">CLI Preview</button>
+      </div>
+      <pre id="jsonPreview" class="code"></pre>
+      <textarea id="cliPreview" class="code hidden"></textarea>
+      <div class="actions">
+        <button id="previewBtn">Preview Configuration</button>
+        <button id="downloadBtn">Download Config</button>
+        <button id="copyBtn">Copy to Clipboard</button>
+      </div>
+      <label>Template Name<input id="templateName" type="text" placeholder="my-template" /></label>
+      <p id="statusText" class="muted"></p>
+    </aside>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/nunjucks@3.2.4/browser/nunjucks.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
